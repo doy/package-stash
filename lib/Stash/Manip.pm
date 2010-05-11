@@ -222,33 +222,44 @@ sub remove_package_symbol {
     # no doubt this is grossly inefficient and 
     # could be done much easier and faster in XS
 
-    my ($scalar_desc, $array_desc, $hash_desc, $code_desc) = (
+    my ($scalar_desc, $array_desc, $hash_desc, $code_desc, $io_desc) = (
         { sigil => '$', type => 'SCALAR', name => $name },
         { sigil => '@', type => 'ARRAY',  name => $name },
         { sigil => '%', type => 'HASH',   name => $name },
         { sigil => '&', type => 'CODE',   name => $name },
+        { sigil => '',  type => 'IO',     name => $name },
     );
 
-    my ($scalar, $array, $hash, $code);
+    my ($scalar, $array, $hash, $code, $io);
     if ($type eq 'SCALAR') {
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
+        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'ARRAY') {
         $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
+        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'HASH') {
         $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
+        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'CODE') {
         $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
+        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
+    }
+    elsif ($type eq 'IO') {
+        $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
+        $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
+        $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
+        $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
     }
     else {
         confess "This should never ever ever happen";
@@ -260,6 +271,7 @@ sub remove_package_symbol {
     $self->add_package_symbol($array_desc  => $array)  if defined $array;
     $self->add_package_symbol($hash_desc   => $hash)   if defined $hash;
     $self->add_package_symbol($code_desc   => $code)   if defined $code;
+    $self->add_package_symbol($io_desc     => $io)     if defined $io;
 }
 
 =head2 list_all_package_symbols $type_filter
