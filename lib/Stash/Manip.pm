@@ -7,13 +7,31 @@ use Scalar::Util qw(reftype);
 
 =head1 NAME
 
-Stash::Manip -
+Stash::Manip - routines for manipulating stashes
 
 =head1 SYNOPSIS
 
+  my $stash = Stash::Manip->new('Foo');
+  $stash->add_package_symbol('%foo', {bar => 1});
+  # $Foo::foo{bar} == 1
+  $stash->has_package_symbol('$foo') # false
+  my $namespace = $stash->namespace;
+  *{ $namespace->{foo} }{HASH} # {bar => 1}
 
 =head1 DESCRIPTION
 
+Manipulating stashes (Perl's symbol tables) is occasionally necessary, but
+incredibly messy, and easy to get wrong. This module hides all of that behind a
+simple API.
+
+=head1 METHODS
+
+=cut
+
+=head2 new $package_name
+
+Creates a new C<Stash::Manip> object, for the package given as the only
+argument.
 
 =cut
 
@@ -23,9 +41,21 @@ sub new {
     return bless { package => $namespace }, $class;
 }
 
+=head2 name
+
+Returns the name of the package that this object represents.
+
+=cut
+
 sub name {
     return $_[0]->{package};
 }
+
+=head2 namespace
+
+Returns the raw stash itself.
+
+=cut
 
 sub namespace {
     # NOTE:
@@ -65,6 +95,18 @@ sub namespace {
     }
 }
 
+=head2 add_package_symbol $variable $value
+
+Adds a new package symbol, for the symbol given as C<$variable>, and optionally
+gives it an initial value of C<$value>. C<$variable> should be the name of
+variable including the sigil, so
+
+  Stash::Manip->new('Foo')->add_package_symbol('%foo')
+
+will create C<%Foo::foo>.
+
+=cut
+
 sub add_package_symbol {
     my ($self, $variable, $initial_value) = @_;
 
@@ -79,6 +121,12 @@ sub add_package_symbol {
     *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
 }
 
+=head2 remove_package_glob $name
+
+Removes all package variables with the given name, regardless of sigil.
+
+=cut
+
 sub remove_package_glob {
     my ($self, $name) = @_;
     no strict 'refs';
@@ -86,6 +134,12 @@ sub remove_package_glob {
 }
 
 # ... these functions deal with stuff on the namespace level
+
+=head2 has_package_symbol $variable
+
+Returns whether or not the given package variable (including sigil) exists.
+
+=cut
 
 sub has_package_symbol {
     my ($self, $variable) = @_;
@@ -113,6 +167,12 @@ sub has_package_symbol {
         return $type eq 'CODE';
     }
 }
+
+=head2 get_package_symbol $variable
+
+Returns the value of the given package variable (including sigil).
+
+=cut
 
 sub get_package_symbol {
     my ($self, $variable) = @_;
@@ -142,6 +202,14 @@ sub get_package_symbol {
         }
     }
 }
+
+=head2 remove_package_symbol $variable
+
+Removes the package variable described by C<$variable> (which includes the
+sigil); other variables with the same name but different sigils will be
+untouched.
+
+=cut
 
 sub remove_package_symbol {
     my ($self, $variable) = @_;
@@ -194,6 +262,15 @@ sub remove_package_symbol {
     $self->add_package_symbol($code_desc   => $code)   if defined $code;
 }
 
+=head2 list_all_package_symbols $type_filter
+
+Returns a list of package variable names in the package, without sigils. If a
+C<type_filter> is passed, it is used to select package variables of a given
+type, where valid types are the slots of a typeglob ('SCALAR', 'CODE', 'HASH',
+etc).
+
+=cut
+
 sub list_all_package_symbols {
     my ($self, $type_filter) = @_;
 
@@ -225,6 +302,8 @@ L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Stash-Manip>.
 
 =head1 SEE ALSO
 
+L<Class::MOP::Package> - this module is a factoring out of code that used to
+live here
 
 =head1 SUPPORT
 
@@ -257,6 +336,9 @@ L<http://search.cpan.org/dist/Stash-Manip>
 =head1 AUTHOR
 
   Jesse Luehrs <doy at tozt dot net>
+
+Mostly copied from code from L<Class::MOP::Package>, by Stevan Little and the
+Moose Cabal.
 
 =head1 COPYRIGHT AND LICENSE
 
