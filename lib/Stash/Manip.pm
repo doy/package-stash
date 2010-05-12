@@ -263,25 +263,25 @@ sub remove_package_symbol {
         $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'ARRAY') {
-        $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
+        $scalar = $self->get_package_symbol($scalar_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
         $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'HASH') {
-        $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
+        $scalar = $self->get_package_symbol($scalar_desc);
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
         $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'CODE') {
-        $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
+        $scalar = $self->get_package_symbol($scalar_desc);
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
         $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
     }
     elsif ($type eq 'IO') {
-        $scalar = $self->get_package_symbol($scalar_desc) if $self->has_package_symbol($scalar_desc);
+        $scalar = $self->get_package_symbol($scalar_desc);
         $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
         $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
         $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
@@ -292,7 +292,7 @@ sub remove_package_symbol {
 
     $self->remove_package_glob($name);
 
-    $self->add_package_symbol($scalar_desc => $scalar) if defined $scalar;
+    $self->add_package_symbol($scalar_desc => $scalar);
     $self->add_package_symbol($array_desc  => $array)  if defined $array;
     $self->add_package_symbol($hash_desc   => $hash)   if defined $hash;
     $self->add_package_symbol($code_desc   => $code)   if defined $code;
