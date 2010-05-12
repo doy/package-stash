@@ -225,22 +225,4 @@ is($foo_stash->get_package_symbol('@foo'), $ARRAY, '... got the right values for
     ok(defined(*{"Foo::foo"}{ARRAY}), '... the @foo slot has NOT been removed');
 }
 
-# check some errors
-
-dies_ok {
-    $foo_stash->add_package_symbol('bar');
-} '... no sigil for bar';
-
-dies_ok {
-    $foo_stash->remove_package_symbol('bar');
-} '... no sigil for bar';
-
-dies_ok {
-    $foo_stash->get_package_symbol('bar');
-} '... no sigil for bar';
-
-dies_ok {
-    $foo_stash->has_package_symbol('bar');
-} '... no sigil for bar';
-
 done_testing;

@@ -24,6 +24,9 @@ Manipulating stashes (Perl's symbol tables) is occasionally necessary, but
 incredibly messy, and easy to get wrong. This module hides all of that behind a
 simple API.
 
+NOTE: Most methods in this class require a variable specification that includes
+a sigil. If this sigil is absent, it is assumed to represent the IO slot.
+
 =head1 METHODS
 
 =cut
@@ -75,23 +78,23 @@ sub namespace {
         '@' => 'ARRAY',
         '%' => 'HASH',
         '&' => 'CODE',
+        ''  => 'IO',
     );
 
     sub _deconstruct_variable_name {
         my ($self, $variable) = @_;
 
-        (defined $variable)
+        (defined $variable && length $variable)
             || confess "You must pass a variable name";
 
         my $sigil = substr($variable, 0, 1, '');
 
-        (defined $sigil)
-            || confess "The variable name must include a sigil";
-
-        (exists $SIGIL_MAP{$sigil})
-            || confess "I do not recognize that sigil '$sigil'";
-
-        return ($variable, $sigil, $SIGIL_MAP{$sigil});
+        if (exists $SIGIL_MAP{$sigil}) {
+            return ($variable, $sigil, $SIGIL_MAP{$sigil});
+        }
+        else {
+            return ("${sigil}${variable}", '', $SIGIL_MAP{''});
+        }
     }
 }
 
