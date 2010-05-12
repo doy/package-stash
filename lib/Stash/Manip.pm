@@ -110,12 +110,30 @@ will create C<%Foo::foo>.
 
 =cut
 
+sub _valid_for_type {
+    my $self = shift;
+    my ($value, $type) = @_;
+    if ($type eq 'HASH' || $type eq 'ARRAY'
+     || $type eq 'IO'   || $type eq 'CODE') {
+        return reftype($value) eq $type;
+    }
+    else {
+        my $ref = reftype($value);
+        return !defined($ref) || $ref eq 'SCALAR' || $ref eq 'REF' || $ref eq 'LVALUE';
+    }
+}
+
 sub add_package_symbol {
     my ($self, $variable, $initial_value) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
         ? @{$variable}{qw[name sigil type]}
         : $self->_deconstruct_variable_name($variable);
+
+    if (@_ > 2) {
+        $self->_valid_for_type($initial_value, $type)
+            || confess "$initial_value is not of type $type";
+    }
 
     my $pkg = $self->name;
 

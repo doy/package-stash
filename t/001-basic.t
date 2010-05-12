@@ -225,4 +225,27 @@ is($foo_stash->get_package_symbol('@foo'), $ARRAY, '... got the right values for
     ok(defined(*{"Foo::foo"}{ARRAY}), '... the @foo slot has NOT been removed');
 }
 
+# check some errors
+
+dies_ok {
+    $foo_stash->add_package_symbol('@bar', {})
+} "can't initialize a slot with the wrong type of value";
+
+dies_ok {
+    $foo_stash->add_package_symbol('bar', [])
+} "can't initialize a slot with the wrong type of value";
+
+dies_ok {
+    $foo_stash->add_package_symbol('$bar', sub { })
+} "can't initialize a slot with the wrong type of value";
+
+{
+    package Bar;
+    open *foo, '<', $0;
+}
+
+dies_ok {
+    $foo_stash->add_package_symbol('$bar', *Bar::foo{IO})
+} "can't initialize a slot with the wrong type of value";
+
 done_testing;
