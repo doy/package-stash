@@ -184,8 +184,12 @@ sub get_package_symbol {
     my $namespace = $self->namespace;
 
     # FIXME
-    $self->add_package_symbol($variable)
-        unless exists $namespace->{$name};
+    if (!exists $namespace->{$name}) {
+        my $initial = $type eq 'ARRAY' ? []
+                    : $type eq 'HASH'  ? {}
+                    : \undef;
+        $self->add_package_symbol($variable, $initial)
+    }
 
     my $entry_ref = \$namespace->{$name};
 
