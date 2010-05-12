@@ -248,4 +248,28 @@ dies_ok {
     $foo_stash->add_package_symbol('$bar', *Bar::foo{IO})
 } "can't initialize a slot with the wrong type of value";
 
+# check compile time manipulation
+
+{
+    package Baz;
+
+    our $foo = 23;
+    our @foo = "bar";
+    our %foo = (baz => 1);
+    sub foo { }
+    open *foo, '<', $0;
+    BEGIN { Stash::Manip->new(__PACKAGE__)->remove_package_symbol('&foo') }
+}
+
+{
+    my $stash = Stash::Manip->new('Baz');
+    { local $TODO = "getting undef for some reason";
+    is(${ $stash->get_package_symbol('$foo') }, 23, "got \$foo");
+    }
+    is_deeply($stash->get_package_symbol('@foo'), ['bar'], "got \@foo");
+    is_deeply($stash->get_package_symbol('%foo'), {baz => 1}, "got \%foo");
+    ok(!$stash->has_package_symbol('&foo'), "got \&foo");
+    is($stash->get_package_symbol('foo'), *Baz::foo{IO}, "got foo");
+}
+
 done_testing;
