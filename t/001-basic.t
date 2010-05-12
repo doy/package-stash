@@ -263,9 +263,7 @@ dies_ok {
 
 {
     my $stash = Stash::Manip->new('Baz');
-    { local $TODO = "getting undef for some reason";
     is(${ $stash->get_package_symbol('$foo') }, 23, "got \$foo");
-    }
     is_deeply($stash->get_package_symbol('@foo'), ['bar'], "got \@foo");
     is_deeply($stash->get_package_symbol('%foo'), {baz => 1}, "got \%foo");
     ok(!$stash->has_package_symbol('&foo'), "got \&foo");
