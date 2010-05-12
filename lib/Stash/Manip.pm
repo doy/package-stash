@@ -41,7 +41,7 @@ argument.
 sub new {
     my $class = shift;
     my ($namespace) = @_;
-    return bless { package => $namespace }, $class;
+    return bless { 'package' => $namespace }, $class;
 }
 
 =head2 name
