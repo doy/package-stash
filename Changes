@@ -1,4 +1,4 @@
-Revision history for Stash::Manip
+Revision history for Package::Stash
 
 0.02    2010-05-13
     Need to dep on Test::Exception

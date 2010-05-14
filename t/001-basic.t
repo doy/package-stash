@@ -4,9 +4,9 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-use Stash::Manip;
+use Package::Stash;
 
-dies_ok { Stash::Manip->name } q{... can't call name() as a class method};
+dies_ok { Package::Stash->name } q{... can't call name() as a class method};
 
 {
     package Foo;
@@ -17,7 +17,7 @@ dies_ok { Stash::Manip->name } q{... can't call name() as a class method};
 # ----------------------------------------------------------------------
 ## tests adding a HASH
 
-my $foo_stash = Stash::Manip->new('Foo');
+my $foo_stash = Package::Stash->new('Foo');
 ok(!defined($Foo::{foo}), '... the %foo slot has not been created yet');
 ok(!$foo_stash->has_package_symbol('%foo'), '... the object agrees');
 ok(!defined($Foo::{foo}), '... checking doesn\' vivify');
@@ -258,11 +258,11 @@ dies_ok {
     our %foo = (baz => 1);
     sub foo { }
     open *foo, '<', $0;
-    BEGIN { Stash::Manip->new(__PACKAGE__)->remove_package_symbol('&foo') }
+    BEGIN { Package::Stash->new(__PACKAGE__)->remove_package_symbol('&foo') }
 }
 
 {
-    my $stash = Stash::Manip->new('Baz');
+    my $stash = Package::Stash->new('Baz');
     is(${ $stash->get_package_symbol('$foo') }, 23, "got \$foo");
     is_deeply($stash->get_package_symbol('@foo'), ['bar'], "got \@foo");
     is_deeply($stash->get_package_symbol('%foo'), {baz => 1}, "got \%foo");

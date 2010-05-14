@@ -3,9 +3,9 @@ use strict;
 use warnings;
 use Test::More;
 
-use Stash::Manip;
+use Package::Stash;
 
-my $stash = Stash::Manip->new('Foo');
+my $stash = Package::Stash->new('Foo');
 $stash->add_package_symbol('%foo', {bar => 1});
 {
     no warnings 'once';

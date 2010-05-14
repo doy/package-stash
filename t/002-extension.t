@@ -5,11 +5,11 @@ use Test::More;
 use Test::Exception;
 
 {
-    package My::Stash::Manip;
+    package My::Package::Stash;
     use strict;
     use warnings;
 
-    use base 'Stash::Manip';
+    use base 'Package::Stash';
 
     use Symbol 'gensym';
 
@@ -29,10 +29,10 @@ use Test::Exception;
 }
 
 # No actually package Foo exists :)
-my $foo_stash = My::Stash::Manip->new('Foo');
+my $foo_stash = My::Package::Stash->new('Foo');
 
-isa_ok($foo_stash, 'My::Stash::Manip');
-isa_ok($foo_stash, 'Stash::Manip');
+isa_ok($foo_stash, 'My::Package::Stash');
+isa_ok($foo_stash, 'Package::Stash');
 
 ok(!defined($Foo::{foo}), '... the %foo slot has not been created yet');
 ok(!$foo_stash->has_package_symbol('%foo'), '... the foo_stash agrees');

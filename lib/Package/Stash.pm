@@ -1,4 +1,4 @@
-package Stash::Manip;
+package Package::Stash;
 use strict;
 use warnings;
 
@@ -7,11 +7,11 @@ use Scalar::Util qw(reftype);
 
 =head1 NAME
 
-Stash::Manip - routines for manipulating stashes
+Package::Stash - routines for manipulating stashes
 
 =head1 SYNOPSIS
 
-  my $stash = Stash::Manip->new('Foo');
+  my $stash = Package::Stash->new('Foo');
   $stash->add_package_symbol('%foo', {bar => 1});
   # $Foo::foo{bar} == 1
   $stash->has_package_symbol('$foo') # false
@@ -33,7 +33,7 @@ a sigil. If this sigil is absent, it is assumed to represent the IO slot.
 
 =head2 new $package_name
 
-Creates a new C<Stash::Manip> object, for the package given as the only
+Creates a new C<Package::Stash> object, for the package given as the only
 argument.
 
 =cut
@@ -104,7 +104,7 @@ Adds a new package symbol, for the symbol given as C<$variable>, and optionally
 gives it an initial value of C<$value>. C<$variable> should be the name of
 variable including the sigil, so
 
-  Stash::Manip->new('Foo')->add_package_symbol('%foo')
+  Package::Stash->new('Foo')->add_package_symbol('%foo')
 
 will create C<%Foo::foo>.
 
@@ -345,8 +345,8 @@ sub list_all_package_symbols {
 No known bugs.
 
 Please report any bugs through RT: email
-C<bug-stash-manip at rt.cpan.org>, or browse to
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Stash-Manip>.
+C<bug-package-stash at rt.cpan.org>, or browse to
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Package-Stash>.
 
 =head1 SEE ALSO
 
@@ -357,7 +357,7 @@ live here
 
 You can find this documentation for this module with the perldoc command.
 
-    perldoc Stash::Manip
+    perldoc Package::Stash
 
 You can also look for information at:
 
@@ -365,19 +365,19 @@ You can also look for information at:
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Stash-Manip>
+L<http://annocpan.org/dist/Package-Stash>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/Stash-Manip>
+L<http://cpanratings.perl.org/d/Package-Stash>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Stash-Manip>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Package-Stash>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Stash-Manip>
+L<http://search.cpan.org/dist/Package-Stash>
 
 =back
 

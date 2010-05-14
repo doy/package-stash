@@ -18,10 +18,10 @@ use Test::Exception;
     sub bar { }
 }
 
-use Stash::Manip;
+use Package::Stash;
 
 {
-    my $stash = Stash::Manip->new('Foo');
+    my $stash = Package::Stash->new('Foo');
     ok($stash->has_package_symbol('&foo'), "has &foo");
     ok($stash->has_package_symbol('foo'), "has foo");
     $stash->remove_package_symbol('&foo');
@@ -30,7 +30,7 @@ use Stash::Manip;
 }
 
 {
-    my $stash = Stash::Manip->new('Bar');
+    my $stash = Package::Stash->new('Bar');
     ok($stash->has_package_symbol('&bar'), "has &bar");
     ok($stash->has_package_symbol('bar'), "has bar");
     $stash->remove_package_symbol('bar');
@@ -39,7 +39,7 @@ use Stash::Manip;
 }
 
 {
-    my $stash = Stash::Manip->new('Baz');
+    my $stash = Package::Stash->new('Baz');
     lives_ok {
         $stash->add_package_symbol('baz', *Foo::foo{IO});
     } "can add an IO symbol";
