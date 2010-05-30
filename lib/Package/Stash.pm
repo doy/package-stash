@@ -98,7 +98,7 @@ sub namespace {
     }
 }
 
-=head2 add_package_symbol $variable $value
+=head2 add_package_symbol $variable $value $filename $firstlinenum $lastlinenum
 
 Adds a new package symbol, for the symbol given as C<$variable>, and optionally
 gives it an initial value of C<$value>. C<$variable> should be the name of
@@ -107,6 +107,18 @@ variable including the sigil, so
   Package::Stash->new('Foo')->add_package_symbol('%foo')
 
 will create C<%Foo::foo>.
+
+The optional $filename, $firstlinenum, and $lastlinenum arguments can be used
+to indicate where the symbol should be regarded as having been defined.
+Currently these values are only used if the symbol is a subroutine ('C<&>'
+sigil) and only if C<$^P & 0x10> is true.  In which case the special
+C<%DB::sub> hash is updated to record the values of $filename, $firstlinenum,
+and $lastlinenum for the subroutine.
+
+This is especially useful for debuggers and profilers, which use C<%DB::sub> to
+determine where the source code for a subroutine can be found.  See
+L<http://perldoc.perl.org/perldebguts.html#Debugger-Internals> for more
+information about C<%DB::sub>.
 
 =cut
 
@@ -124,18 +136,31 @@ sub _valid_for_type {
 }
 
 sub add_package_symbol {
-    my ($self, $variable, $initial_value) = @_;
+    my ($self, $variable, $initial_value) = @_; # extra args unpacked below
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
         ? @{$variable}{qw[name sigil type]}
         : $self->_deconstruct_variable_name($variable);
 
+    my $pkg = $self->name;
+
     if (@_ > 2) {
         $self->_valid_for_type($initial_value, $type)
             || confess "$initial_value is not of type $type";
-    }
 
-    my $pkg = $self->name;
+        # cheap fail-fast check for PERLDBf_SUBLINE and '&'
+        if ($^P and $^P & 0x10 && $sigil eq '&') {
+            my (undef, undef, undef, $filename, $firstlinenum, $lastlinenum) = @_;
+
+            (undef, $filename, $firstlinenum) = caller
+                if not defined $filename;
+            $lastlinenum = $firstlinenum ||= 0
+                if not defined $lastlinenum;
+
+            # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
+            $DB::sub{$pkg . '::' . $name} = "$filename:$firstlinenum-$lastlinenum";
+        }
+    }
 
     no strict 'refs';
     no warnings 'redefine', 'misc', 'prototype';
