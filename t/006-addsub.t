@@ -32,7 +32,12 @@ my $line = (Foo->funk())[1];
 is $DB::sub{'Foo::funk'}, sprintf "%s:%d-%d", __FILE__, $line, $line,
     '... got the right %DB::sub value for funk default args';
 
-$foo_stash->add_package_symbol('&dunk' => sub { "Foo::dunk" }, "FileName", 100, 199);
+$foo_stash->add_package_symbol(
+    '&dunk'        => sub { "Foo::dunk" },
+    filename       => "FileName",
+    first_line_num => 100,
+    last_line_num  => 199
+);
 
 is $DB::sub{'Foo::dunk'}, sprintf "%s:%d-%d", "FileName", 100, 199,
     '... got the right %DB::sub value for dunk with specified args';

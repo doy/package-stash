@@ -136,7 +136,7 @@ sub _valid_for_type {
 }
 
 sub add_package_symbol {
-    my ($self, $variable, $initial_value) = @_; # extra args unpacked below
+    my ($self, $variable, $initial_value, %opts) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
         ? @{$variable}{qw[name sigil type]}
@@ -150,15 +150,16 @@ sub add_package_symbol {
 
         # cheap fail-fast check for PERLDBf_SUBLINE and '&'
         if ($^P and $^P & 0x10 && $sigil eq '&') {
-            my (undef, undef, undef, $filename, $firstlinenum, $lastlinenum) = @_;
+            my $filename = $opts{filename};
+            my $first_line_num = $opts{first_line_num};
 
-            (undef, $filename, $firstlinenum) = caller
+            (undef, $filename, $first_line_num) = caller
                 if not defined $filename;
-            $lastlinenum = $firstlinenum ||= 0
-                if not defined $lastlinenum;
+
+            my $last_line_num = $opts{last_line_num} || ($first_line_num ||= 0);
 
             # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
-            $DB::sub{$pkg . '::' . $name} = "$filename:$firstlinenum-$lastlinenum";
+            $DB::sub{$pkg . '::' . $name} = "$filename:$first_line_num-$last_line_num";
         }
     }
 
