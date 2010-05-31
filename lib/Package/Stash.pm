@@ -5,6 +5,7 @@ use warnings;
 
 use Carp qw(confess);
 use Scalar::Util qw(reftype);
+use Sub::Name;
 use Symbol;
 
 =head1 SYNOPSIS
@@ -104,8 +105,8 @@ variable including the sigil, so
 
 will create C<%Foo::foo>.
 
-Valid options (all optional) are C<filename>, C<first_line_num>, and
-C<last_line_num>.
+Valid options (all optional) are C<filename>, C<first_line_num>,
+C<last_line_num>, and C<subname>.
 
 C<$opts{filename}>, C<$opts{first_line_num}>, and C<$opts{last_line_num}> can
 be used to indicate where the symbol should be regarded as having been defined.
@@ -119,6 +120,11 @@ This is especially useful for debuggers and profilers, which use C<%DB::sub> to
 determine where the source code for a subroutine can be found.  See
 L<http://perldoc.perl.org/perldebguts.html#Debugger-Internals> for more
 information about C<%DB::sub>.
+
+C<$opts{subname}> is used to set the name for the installed subroutine (it is
+ignored if the symbol isn't a subroutine). It uses L<Sub::Name> to set the
+name. If an unqualified name is given, it will add the name of the package
+corresponding to this C<Package::Stash> instance.
 
 =cut
 
@@ -165,7 +171,14 @@ sub add_package_symbol {
 
     no strict 'refs';
     no warnings 'redefine', 'misc', 'prototype';
-    *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
+    if ($type eq 'CODE' && $initial_value && exists $opts{subname}) {
+        $opts{subname} = $pkg . '::' . $opts{subname}
+            if $opts{subname} !~ /::/;
+        *{$pkg . '::' . $name} = subname $opts{subname} => $initial_value;
+    }
+    else {
+        *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
+    }
 }
 
 =method remove_package_glob $name
