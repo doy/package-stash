@@ -98,7 +98,7 @@ sub namespace {
     }
 }
 
-=head2 add_package_symbol $variable $value $filename $firstlinenum $lastlinenum
+=head2 add_package_symbol $variable $value %opts
 
 Adds a new package symbol, for the symbol given as C<$variable>, and optionally
 gives it an initial value of C<$value>. C<$variable> should be the name of
@@ -108,12 +108,16 @@ variable including the sigil, so
 
 will create C<%Foo::foo>.
 
-The optional $filename, $firstlinenum, and $lastlinenum arguments can be used
-to indicate where the symbol should be regarded as having been defined.
+Valid options (all optional) are C<filename>, C<first_line_num>, and
+C<last_line_num>.
+
+C<$opts{filename}>, C<$opts{first_line_num}>, and C<$opts{last_line_num}> can
+be used to indicate where the symbol should be regarded as having been defined.
 Currently these values are only used if the symbol is a subroutine ('C<&>'
-sigil) and only if C<$^P & 0x10> is true.  In which case the special
-C<%DB::sub> hash is updated to record the values of $filename, $firstlinenum,
-and $lastlinenum for the subroutine.
+sigil) and only if C<$^P & 0x10> is true, in which case the special C<%DB::sub>
+hash is updated to record the values of C<filename>, C<first_line_num>, and
+C<last_line_num> for the subroutine. If these are not passed, their values are
+inferred (as much as possible) from C<caller> information.
 
 This is especially useful for debuggers and profilers, which use C<%DB::sub> to
 determine where the source code for a subroutine can be found.  See
