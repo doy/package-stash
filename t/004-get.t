@@ -45,4 +45,22 @@ use Package::Stash;
     }
 }
 
+{
+    my $stash = Package::Stash->new('Baz');
+    my $val = $stash->get_or_add_package_symbol('%foo');
+    is(ref($val), 'HASH', "got something");
+    $val->{bar} = 1;
+    is_deeply($stash->get_or_add_package_symbol('%foo'), {bar => 1},
+            "got the right variable");
+}
+
+{
+    my $stash = Package::Stash->new('Quux');
+    my $val = $stash->get_or_add_package_symbol('@foo');
+    is(ref($val), 'ARRAY', "got something");
+    push @$val, 1;
+    is_deeply($stash->get_or_add_package_symbol('@foo'), [1],
+            "got the right variable");
+}
+
 done_testing;

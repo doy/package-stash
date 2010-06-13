@@ -226,7 +226,7 @@ Returns the value of the given package variable (including sigil).
 =cut
 
 sub get_package_symbol {
-    my ($self, $variable) = @_;
+    my ($self, $variable, %opts) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
         ? @{$variable}{qw[name sigil type]}
@@ -235,7 +235,22 @@ sub get_package_symbol {
     my $namespace = $self->namespace;
 
     if (!exists $namespace->{$name}) {
-        $self->add_package_symbol($variable)
+        # assigning to the result of this function like
+        #   @{$stash->get_package_symbol('@ISA')} = @new_ISA
+        # makes the result not visible until the variable is explicitly
+        # accessed... in the case of @ISA, this might never happen
+        # for instance, assigning like that and then calling $obj->isa
+        # will fail. see t/005-isa.t
+        if ($opts{vivify} && $type eq 'ARRAY' && $name ne 'ISA') {
+            $self->add_package_symbol($variable, []);
+        }
+        elsif ($opts{vivify} && $type eq 'HASH') {
+            $self->add_package_symbol($variable, {});
+        }
+        else {
+            # FIXME
+            $self->add_package_symbol($variable)
+        }
     }
 
     my $entry_ref = \$namespace->{$name};
@@ -252,6 +267,18 @@ sub get_package_symbol {
             return undef;
         }
     }
+}
+
+=head2 get_or_add_package_symbol $variable
+
+Like C<get_package_symbol>, except that it will return an empty hashref or
+arrayref if the variable doesn't exist.
+
+=cut
+
+sub get_or_add_package_symbol {
+    my $self = shift;
+    $self->get_package_symbol(@_, vivify => 1);
 }
 
 =head2 remove_package_symbol $variable
