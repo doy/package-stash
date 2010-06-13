@@ -235,22 +235,7 @@ sub get_package_symbol {
     my $namespace = $self->namespace;
 
     if (!exists $namespace->{$name}) {
-        # assigning to the result of this function like
-        #   @{$stash->get_package_symbol('@ISA')} = @new_ISA
-        # makes the result not visible until the variable is explicitly
-        # accessed... in the case of @ISA, this might never happen
-        # for instance, assigning like that and then calling $obj->isa
-        # will fail. see t/005-isa.t
-        if ($type eq 'ARRAY' && $name ne 'ISA') {
-            $self->add_package_symbol($variable, []);
-        }
-        elsif ($type eq 'HASH') {
-            $self->add_package_symbol($variable, {});
-        }
-        else {
-            # FIXME
-            $self->add_package_symbol($variable)
-        }
+        $self->add_package_symbol($variable)
     }
 
     my $entry_ref = \$namespace->{$name};
