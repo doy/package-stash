@@ -1,16 +1,18 @@
-Revision history for Package::Stash
+Revision history for Package-Stash
 
-0.04    2010-06-13
-    get_package_symbol now doesn't autovivify stash entries. A new method
-    get_or_add_package_symbol can now be used for that behavior.
+{{$NEXT}}
 
-    Update %DB::sub on add_package_symbol (Tim Bunce).
+0.04  2010-06-13
+      - get_package_symbol now doesn't autovivify stash entries. A new method
+        get_or_add_package_symbol can now be used for that behavior.
 
-0.03    2010-05-14
-    Rename from Stash::Manip to Package::Stash
+      - Update %DB::sub on add_package_symbol (Tim Bunce).
 
-0.02    2010-05-13
-    Need to dep on Test::Exception
+0.03  2010-05-14
+      - Rename from Stash::Manip to Package::Stash
 
-0.01    2010-05-12
-    Initial release
+0.02  2010-05-13
+      - Need to dep on Test::Exception
+
+0.01  2010-05-12
+      - Initial release
