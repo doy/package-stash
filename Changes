@@ -1,6 +1,9 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - bump Test::More requirement for done_testing
+
+      - update packaging stuff
 
 0.04  2010-06-13
       - get_package_symbol now doesn't autovivify stash entries. A new method
