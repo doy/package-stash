@@ -55,12 +55,12 @@ Returns the raw stash itself.
 
 sub namespace {
     # NOTE:
-    # because of issues with the Perl API 
-    # to the typeglob in some versions, we 
-    # need to just always grab a new 
-    # reference to the hash here. Ideally 
+    # because of issues with the Perl API
+    # to the typeglob in some versions, we
+    # need to just always grab a new
+    # reference to the hash here. Ideally
     # we could just store a ref and it would
-    # Just Work, but oh well :\    
+    # Just Work, but oh well :\
     no strict 'refs';
     return \%{$_[0]->name . '::'};
 }
@@ -290,7 +290,7 @@ sub remove_package_symbol {
         : $self->_deconstruct_variable_name($variable);
 
     # FIXME:
-    # no doubt this is grossly inefficient and 
+    # no doubt this is grossly inefficient and
     # could be done much easier and faster in XS
 
     my ($scalar_desc, $array_desc, $hash_desc, $code_desc, $io_desc) = (
@@ -361,7 +361,7 @@ sub list_all_package_symbols {
     return keys %{$namespace} unless defined $type_filter;
 
     # NOTE:
-    # or we can filter based on 
+    # or we can filter based on
     # type (SCALAR|ARRAY|HASH|CODE)
     if ($type_filter eq 'CODE') {
         return grep {
