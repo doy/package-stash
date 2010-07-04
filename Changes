@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.05  2010-06-15
       - bump Test::More requirement for done_testing
 
       - update packaging stuff
