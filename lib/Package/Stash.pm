@@ -375,6 +375,14 @@ sub list_all_package_symbols {
     }
 }
 
+=head1 BUGS
+
+No known bugs.
+
+Please report any bugs through RT: email
+C<bug-package-stash at rt.cpan.org>, or browse to
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Package-Stash>.
+
 =head1 SEE ALSO
 
 =over 4
@@ -384,6 +392,41 @@ sub list_all_package_symbols {
 This module is a factoring out of code that used to live here
 
 =back
+
+=head1 SUPPORT
+
+You can find this documentation for this module with the perldoc command.
+
+    perldoc Package::Stash
+
+You can also look for information at:
+
+=over 4
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Package-Stash>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Package-Stash>
+
+=item * RT: CPAN's request tracker
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Package-Stash>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Package-Stash>
+
+=back
+
+=head1 AUTHOR
+
+Jesse Luehrs <doy at tozt dot net>
+
+Mostly copied from code from L<Class::MOP::Package>, by Stevan Little and the
+Moose Cabal.
 
 =cut
 
