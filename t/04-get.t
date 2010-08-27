@@ -90,9 +90,12 @@ use Package::Stash;
         open $val, '<', \$str;
         is(readline($stash->get_package_symbol('FOO')), "foo",
            "got the right variable");
+        seek($stash->get_package_symbol('FOO'), 0, 0);
         {
             package Io;
             ::isa_ok(*FOO{IO}, 'IO');
+            ::is(<FOO>, "foo",
+                 "stash has the right variable");
         }
     }
 }
@@ -183,11 +186,14 @@ TODO: {
         open $val, '<', \$str;
         is(readline($stash->get_package_symbol('FOO')), "foo",
            "got the right variable");
+        seek($stash->get_package_symbol('FOO'), 0, 0);
     }
     {
         package Io::Vivify;
         no warnings 'once';
         ::isa_ok(*FOO{IO}, 'IO');
+        ::is(<FOO>, "foo",
+             "stash has the right variable");
     }
 }
 
