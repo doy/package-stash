@@ -5,6 +5,7 @@ use warnings;
 
 use Carp qw(confess);
 use Scalar::Util qw(reftype);
+use Symbol;
 
 =head1 SYNOPSIS
 
@@ -241,9 +242,20 @@ sub get_package_symbol {
         elsif ($type eq 'HASH') {
             $self->add_package_symbol($variable, {});
         }
+        elsif ($type eq 'SCALAR') {
+            $self->add_package_symbol($variable);
+        }
+        elsif ($type eq 'IO') {
+            $self->add_package_symbol($variable, Symbol::geniosym);
+        }
+        elsif ($type eq 'CODE') {
+            # ignoring this case for now, since i don't know what would
+            # be useful to do here (and subs in the stash autovivify in weird
+            # ways too)
+            #$self->add_package_symbol($variable, sub {});
+        }
         else {
-            # FIXME
-            $self->add_package_symbol($variable)
+            confess "Unknown type $type in vivication";
         }
     }
 
