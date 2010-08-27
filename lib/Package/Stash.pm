@@ -229,17 +229,16 @@ sub get_package_symbol {
 
     my $namespace = $self->namespace;
 
-    if (!exists $namespace->{$name}) {
-        # assigning to the result of this function like
-        #   @{$stash->get_package_symbol('@ISA')} = @new_ISA
-        # makes the result not visible until the variable is explicitly
-        # accessed... in the case of @ISA, this might never happen
-        # for instance, assigning like that and then calling $obj->isa
-        # will fail. see t/005-isa.t
-        if ($opts{vivify} && $type eq 'ARRAY' && $name ne 'ISA') {
-            $self->add_package_symbol($variable, []);
+    if ($opts{vivify} && !exists $namespace->{$name}) {
+        if ($type eq 'ARRAY') {
+            $self->add_package_symbol(
+                $variable,
+                # setting our own arrayref manually loses the magicalness or
+                # something
+                $name eq 'ISA' ? () : ([])
+            );
         }
-        elsif ($opts{vivify} && $type eq 'HASH') {
+        elsif ($type eq 'HASH') {
             $self->add_package_symbol($variable, {});
         }
         else {
