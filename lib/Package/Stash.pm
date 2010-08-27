@@ -33,8 +33,18 @@ argument.
 
 sub new {
     my $class = shift;
-    my ($namespace) = @_;
-    return bless { 'package' => $namespace }, $class;
+    my ($package) = @_;
+    my $namespace;
+    {
+        no strict 'refs';
+        # supposedly this caused a bug in earlier perls, but I can't reproduce
+        # it, so re-enabling the caching
+        $namespace = \%{$package . '::'};
+    }
+    return bless {
+        'package'   => $package,
+        'namespace' => $namespace,
+    }, $class;
 }
 
 =method name
@@ -54,15 +64,7 @@ Returns the raw stash itself.
 =cut
 
 sub namespace {
-    # NOTE:
-    # because of issues with the Perl API
-    # to the typeglob in some versions, we
-    # need to just always grab a new
-    # reference to the hash here. Ideally
-    # we could just store a ref and it would
-    # Just Work, but oh well :\
-    no strict 'refs';
-    return \%{$_[0]->name . '::'};
+    return $_[0]->{namespace};
 }
 
 {

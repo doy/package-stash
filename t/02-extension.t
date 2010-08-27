@@ -13,8 +13,11 @@ use Test::Exception;
 
     use Symbol 'gensym';
 
-    sub namespace {
-        $_[0]->{namespace} ||= {}
+    sub new {
+        my $class = shift;
+        my $self = $class->SUPER::new(@_);
+        $self->{namespace} = {};
+        return $self;
     }
 
     sub add_package_symbol {
