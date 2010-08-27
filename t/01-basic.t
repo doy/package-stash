@@ -270,4 +270,58 @@ dies_ok {
     is($stash->get_package_symbol('foo'), *Baz::foo{IO}, "got foo");
 }
 
+{
+    package Quux;
+
+    our $foo = 23;
+    our @foo = "bar";
+    our %foo = (baz => 1);
+    sub foo { }
+    open *foo, '<', $0;
+}
+
+{
+    my $stash = Package::Stash->new('Quux');
+
+    my %expect = (
+        '$foo' => \23,
+        '@foo' => ["bar"],
+        '%foo' => { baz => 1 },
+        '&foo' => \&Quux::foo,
+        'foo'  => *Quux::foo{IO},
+    );
+
+    for my $sym ( sort keys %expect ) {
+        is_deeply(
+            $stash->get_package_symbol($sym),
+            $expect{$sym},
+            "got expected value for $sym"
+        );
+    }
+
+    $stash->add_package_symbol('%bar' => {x => 42});
+
+    $expect{'%bar'} = {x => 42};
+
+    for my $sym ( sort keys %expect ) {
+        is_deeply(
+            $stash->get_package_symbol($sym),
+            $expect{$sym},
+            "got expected value for $sym"
+        );
+    }
+
+    $stash->add_package_symbol('%bar' => {x => 43});
+
+    $expect{'%bar'} = {x => 43};
+
+    for my $sym ( sort keys %expect ) {
+        is_deeply(
+            $stash->get_package_symbol($sym),
+            $expect{$sym},
+            "got expected value for $sym"
+        );
+    }
+}
+
 done_testing;
