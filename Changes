@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.06-TRIAL  2010-08-26
       - re-enable the caching of the stash, since I can't reproduce the bug
         at all
 
