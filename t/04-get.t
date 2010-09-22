@@ -100,47 +100,6 @@ use Package::Stash;
     }
 }
 
-TODO: {
-    # making TODO tests at a mixture of BEGIN and runtime is irritating
-    my $_TODO;
-    BEGIN { $_TODO = "obviously I don't understand this well enough"; }
-    BEGIN { $TODO = $_TODO; }
-    $TODO = $_TODO;
-    BEGIN {
-        my $stash = Package::Stash->new('Code');
-        my $val = $stash->get_package_symbol('&foo');
-        is($val, undef, "got nothing yet");
-    }
-    {
-        no warnings 'void', 'once';
-        \&Code::foo;
-    }
-    BEGIN {
-        my $stash = Package::Stash->new('Code');
-        my $val = $stash->get_package_symbol('&foo');
-        undef $TODO;
-        is(ref($val), 'CODE', "got something");
-        $TODO = $_TODO;
-        SKIP: {
-            eval "require PadWalker"
-                or skip "needs PadWalker", 1;
-            # avoid padwalker segfault
-            if (!defined($val)) {
-                fail("got the right variable");
-            }
-            else {
-                PadWalker::set_closed_over($val, {'$x' => 1});
-                is_deeply({PadWalker::closed_over($stash->get_package_symbol('&foo'))}, {'$x' => 1},
-                          "got the right variable");
-                is_deeply({PadWalker::closed_over(\&Code::foo)}, {'$x' => 1},
-                          "stash has the right variable");
-            }
-        }
-    }
-    BEGIN { undef $TODO; }
-    undef $TODO;
-}
-
 {
     my $stash = Package::Stash->new('Hash::Vivify');
     my $val = $stash->get_or_add_package_symbol('%foo');
