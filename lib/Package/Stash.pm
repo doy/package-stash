@@ -230,32 +230,40 @@ sub get_package_symbol {
 
     my $namespace = $self->namespace;
 
-    if ($opts{vivify} && !exists $namespace->{$name}) {
-        if ($type eq 'ARRAY') {
-            $self->add_package_symbol(
-                $variable,
-                # setting our own arrayref manually loses the magicalness or
-                # something
-                $name eq 'ISA' ? () : ([])
-            );
-        }
-        elsif ($type eq 'HASH') {
-            $self->add_package_symbol($variable, {});
-        }
-        elsif ($type eq 'SCALAR') {
-            $self->add_package_symbol($variable);
-        }
-        elsif ($type eq 'IO') {
-            $self->add_package_symbol($variable, Symbol::geniosym);
-        }
-        elsif ($type eq 'CODE') {
-            # ignoring this case for now, since i don't know what would
-            # be useful to do here (and subs in the stash autovivify in weird
-            # ways too)
-            #$self->add_package_symbol($variable, sub {});
+    if (!exists $namespace->{$name}) {
+        if ($opts{vivify}) {
+            if ($type eq 'ARRAY') {
+                $self->add_package_symbol(
+                    $variable,
+                    # setting our own arrayref manually loses the magicalness
+                    # or something
+                    $name eq 'ISA' ? () : ([])
+                );
+            }
+            elsif ($type eq 'HASH') {
+                $self->add_package_symbol($variable, {});
+            }
+            elsif ($type eq 'SCALAR') {
+                $self->add_package_symbol($variable);
+            }
+            elsif ($type eq 'IO') {
+                $self->add_package_symbol($variable, Symbol::geniosym);
+            }
+            elsif ($type eq 'CODE') {
+                confess "Don't know how to vivify CODE variables";
+            }
+            else {
+                confess "Unknown type $type in vivication";
+            }
         }
         else {
-            confess "Unknown type $type in vivication";
+            if ($type eq 'CODE') {
+                # this effectively "de-vivifies" the code slot. if we don't do
+                # this, referencing the coderef at the end of this function
+                # will cause perl to auto-vivify a stub coderef in the slot,
+                # which isn't what we want
+                $self->add_package_symbol($variable);
+            }
         }
     }
 
