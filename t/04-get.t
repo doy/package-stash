@@ -73,6 +73,31 @@ use Package::Stash;
 
 {
     BEGIN {
+        my $stash = Package::Stash->new('Code');
+        my $val = $stash->get_package_symbol('&foo');
+        is($val, undef, "got nothing yet");
+    }
+    {
+        no warnings 'void', 'once';
+        sub Code::foo { }
+    }
+    BEGIN {
+        my $stash = Package::Stash->new('Code');
+        my $val = $stash->get_package_symbol('&foo');
+        is(ref($val), 'CODE', "got something");
+        is(prototype($val), undef, "got the right variable");
+        &Scalar::Util::set_prototype($val, '&');
+        is($stash->get_package_symbol('&foo'), $val,
+           "got the right variable");
+        is(prototype($stash->get_package_symbol('&foo')), '&',
+           "got the right variable");
+        is(prototype(\&Code::foo), '&',
+           "stash has the right variable");
+    }
+}
+
+{
+    BEGIN {
         my $stash = Package::Stash->new('Io');
         my $val = $stash->get_package_symbol('FOO');
         is($val, undef, "got nothing yet");
