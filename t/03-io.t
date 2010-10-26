@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::Exception;
+use Test::Fatal;
 
 {
     package Foo;
@@ -40,9 +40,9 @@ use Package::Stash;
 
 {
     my $stash = Package::Stash->new('Baz');
-    lives_ok {
+    ok(!exception {
         $stash->add_package_symbol('baz', *Foo::foo{IO});
-    } "can add an IO symbol";
+    }, "can add an IO symbol");
     ok($stash->has_package_symbol('baz'), "has baz");
     is($stash->get_package_symbol('baz'), *Foo::foo{IO}, "got the right baz");
 }
