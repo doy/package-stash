@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.10  2010-10-27
       - only do the weird ISA special-casing on perl versions where it's broken
 
 0.09  2010-10-27
