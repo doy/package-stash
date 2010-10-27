@@ -14,7 +14,8 @@ around _build_MakeFile_PL_template => sub {
     $template .= <<'CHECK_CONFLICTS';
 sub check_conflicts {
     my %conflicts = (
-        'Class::MOP' => '1.09',
+        'Class::MOP'                    => '1.08',
+        'MooseX::Role::WithOverloading' => '0.08',
     );
     my $found = 0;
     for my $mod ( sort keys %conflicts ) {
