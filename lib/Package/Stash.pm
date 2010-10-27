@@ -6,6 +6,9 @@ use warnings;
 use Carp qw(confess);
 use Scalar::Util qw(reftype);
 use Symbol;
+# before 5.12, assigning to the ISA glob would make it lose its magical ->isa
+# powers
+use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
 
 =head1 SYNOPSIS
 
@@ -233,12 +236,15 @@ sub get_package_symbol {
     if (!exists $namespace->{$name}) {
         if ($opts{vivify}) {
             if ($type eq 'ARRAY') {
-                $self->add_package_symbol(
-                    $variable,
-                    # setting our own arrayref manually loses the magicalness
-                    # or something
-                    $name eq 'ISA' ? () : ([])
-                );
+                if (BROKEN_ISA_ASSIGNMENT) {
+                    $self->add_package_symbol(
+                        $variable,
+                        $name eq 'ISA' ? () : ([])
+                    );
+                }
+                else {
+                    $self->add_package_symbol($variable, []);
+                }
             }
             elsif ($type eq 'HASH') {
                 $self->add_package_symbol($variable, {});
