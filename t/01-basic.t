@@ -6,7 +6,7 @@ use Test::Fatal;
 
 use Package::Stash;
 
-ok(exception { Package::Stash->name }, q{... can't call name() as a class method});
+like(exception { Package::Stash->name }, qr/as a HASH ref while "strict refs" in use/, q{... can't call name() as a class method});
 
 {
     package Foo;
@@ -227,26 +227,26 @@ is($foo_stash->get_package_symbol('@foo'), $ARRAY, '... got the right values for
 
 # check some errors
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('@bar', {})
-}, "can't initialize a slot with the wrong type of value");
+}, qr/is not of type ARRAY/, "can't initialize a slot with the wrong type of value");
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('bar', [])
-}, "can't initialize a slot with the wrong type of value");
+}, qr/is not of type IO/, "can't initialize a slot with the wrong type of value");
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('$bar', sub { })
-}, "can't initialize a slot with the wrong type of value");
+}, qr/is not of type SCALAR/, "can't initialize a slot with the wrong type of value");
 
 {
     package Bar;
     open *foo, '<', $0;
 }
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('$bar', *Bar::foo{IO})
-}, "can't initialize a slot with the wrong type of value");
+}, qr/is not of type SCALAR/, "can't initialize a slot with the wrong type of value");
 
 # check compile time manipulation
 
