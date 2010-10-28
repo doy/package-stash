@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.12  2010-10-27
       - actually include the conflict stuff in the release (bah)
 
 0.11  2010-10-27
