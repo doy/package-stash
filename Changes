@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.11  2010-10-27
       - conflict on mx-role-withoverloading too
 
 0.10  2010-10-27
