@@ -2,16 +2,16 @@ Revision history for Package-Stash
 
 {{$NEXT}}
 
-0.12  2010-10-27
+0.12-TRIAL  2010-10-27
       - actually include the conflict stuff in the release (bah)
 
-0.11  2010-10-27
+0.11-TRIAL  2010-10-27
       - conflict on mx-role-withoverloading too
 
-0.10  2010-10-27
+0.10-TRIAL  2010-10-27
       - only do the weird ISA special-casing on perl versions where it's broken
 
-0.09  2010-10-27
+0.09-TRIAL  2010-10-27
       - clean up the vivication code a lot, make it behave more sanely
       - use Test::Fatal instead of Test::Exception (Justin Hunter)
 
