@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - revert the vivification changes for now, to get an actual release out
+        with Test::Fatal
 
 0.12-TRIAL  2010-10-27
       - actually include the conflict stuff in the release (bah)
