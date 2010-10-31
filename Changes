@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.13  2010-10-31
       - revert the vivification changes for now, to get an actual release out
         with Test::Fatal
 
