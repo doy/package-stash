@@ -195,8 +195,6 @@ void
 remove_package_glob(self, name)
     SV *self
     char *name
-  PREINIT:
-    HV *namespace;
   CODE:
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
 
