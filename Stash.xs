@@ -2,6 +2,24 @@
 #include "perl.h"
 #include "XSUB.h"
 
+HV *_get_namespace(SV *self)
+{
+    dSP;
+    SV *ret;
+
+    PUSHMARK(SP);
+    XPUSHs(self);
+    PUTBACK;
+
+    call_method("namespace", G_SCALAR);
+
+    SPAGAIN;
+    ret = POPs;
+    PUTBACK;
+
+    return (HV*)SvRV(ret);
+}
+
 MODULE = Package::Stash  PACKAGE = Package::Stash
 
 SV*
@@ -50,3 +68,12 @@ namespace(self)
     RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
   OUTPUT:
     RETVAL
+
+void
+remove_package_glob(self, name)
+    SV *self
+    char *name
+  INIT:
+    HV *namespace;
+  CODE:
+    hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);

@@ -159,16 +159,6 @@ sub add_package_symbol {
 
 Removes all package variables with the given name, regardless of sigil.
 
-=cut
-
-sub remove_package_glob {
-    my ($self, $name) = @_;
-    no strict 'refs';
-    delete ${$self->name . '::'}{$name};
-}
-
-# ... these functions deal with stuff on the namespace level
-
 =method has_package_symbol $variable
 
 Returns whether or not the given package variable (including sigil) exists.
