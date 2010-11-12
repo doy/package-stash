@@ -15,9 +15,9 @@ my $foo_stash = Package::Stash->new('Foo');
 
 ok(!defined($Foo::{funk}), '... the &funk slot has not been created yet');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('&funk' => sub { "Foo::funk", __LINE__ });
-}, '... created &Foo::funk successfully');
+}, undef, '... created &Foo::funk successfully');
 
 ok(defined($Foo::{funk}), '... the &funk slot was created successfully');
 

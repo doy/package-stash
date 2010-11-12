@@ -6,7 +6,8 @@ use Test::Fatal;
 
 use Package::Stash;
 
-ok(exception { Package::Stash->name }, q{... can't call name() as a class method});
+like(exception { Package::Stash->name }, qr/Can't call name as a class method/,
+   q{... can't call name() as a class method});
 
 {
     package Foo;
@@ -22,9 +23,9 @@ ok(!defined($Foo::{foo}), '... the %foo slot has not been created yet');
 ok(!$foo_stash->has_package_symbol('%foo'), '... the object agrees');
 ok(!defined($Foo::{foo}), '... checking doesn\' vivify');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('%foo' => { one => 1 });
-}, '... created %Foo::foo successfully');
+}, undef, '... created %Foo::foo successfully');
 
 # ... scalar should NOT be created here
 
@@ -63,9 +64,9 @@ $foo->{two} = 2;
 
 ok(!defined($Foo::{bar}), '... the @bar slot has not been created yet');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('@bar' => [ 1, 2, 3 ]);
-}, '... created @Foo::bar successfully');
+}, undef, '... created @Foo::bar successfully');
 
 ok(defined($Foo::{bar}), '... the @bar slot was created successfully');
 ok($foo_stash->has_package_symbol('@bar'), '... the meta agrees');
@@ -89,9 +90,9 @@ ok(!$foo_stash->has_package_symbol('&bar'), '... CODE shouldnt have been created
 
 ok(!defined($Foo::{baz}), '... the $baz slot has not been created yet');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('$baz' => 10);
-}, '... created $Foo::baz successfully');
+}, undef, '... created $Foo::baz successfully');
 
 ok(defined($Foo::{baz}), '... the $baz slot was created successfully');
 ok($foo_stash->has_package_symbol('$baz'), '... the meta agrees');
@@ -115,9 +116,9 @@ is(${$foo_stash->get_package_symbol('$baz')}, 10, '... got the right value back'
 
 ok(!defined($Foo::{funk}), '... the &funk slot has not been created yet');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('&funk' => sub { "Foo::funk" });
-}, '... created &Foo::funk successfully');
+}, undef, '... created &Foo::funk successfully');
 
 ok(defined($Foo::{funk}), '... the &funk slot was created successfully');
 ok($foo_stash->has_package_symbol('&funk'), '... the meta agrees');
@@ -139,23 +140,23 @@ is(Foo->funk(), 'Foo::funk', '... got the right value from the function');
 my $ARRAY = [ 1, 2, 3 ];
 my $CODE = sub { "Foo::foo" };
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('@foo' => $ARRAY);
-}, '... created @Foo::foo successfully');
+}, undef, '... created @Foo::foo successfully');
 
 ok($foo_stash->has_package_symbol('@foo'), '... the @foo slot was added successfully');
 is($foo_stash->get_package_symbol('@foo'), $ARRAY, '... got the right values for @Foo::foo');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('&foo' => $CODE);
-}, '... created &Foo::foo successfully');
+}, undef, '... created &Foo::foo successfully');
 
 ok($foo_stash->has_package_symbol('&foo'), '... the meta agrees');
 is($foo_stash->get_package_symbol('&foo'), $CODE, '... got the right value for &Foo::foo');
 
-ok(!exception {
+is(exception {
     $foo_stash->add_package_symbol('$foo' => 'Foo::foo');
-}, '... created $Foo::foo successfully');
+}, undef, '... created $Foo::foo successfully');
 
 ok($foo_stash->has_package_symbol('$foo'), '... the meta agrees');
 my $SCALAR = $foo_stash->get_package_symbol('$foo');
@@ -166,9 +167,9 @@ is($$SCALAR, 'Foo::foo', '... got the right scalar value back');
     is(${'Foo::foo'}, 'Foo::foo', '... got the right value from the scalar');
 }
 
-ok(!exception {
+is(exception {
     $foo_stash->remove_package_symbol('%foo');
-}, '... removed %Foo::foo successfully');
+}, undef, '... removed %Foo::foo successfully');
 
 ok(!$foo_stash->has_package_symbol('%foo'), '... the %foo slot was removed successfully');
 ok($foo_stash->has_package_symbol('@foo'), '... the @foo slot still exists');
@@ -187,9 +188,9 @@ is($foo_stash->get_package_symbol('$foo'), $SCALAR, '... got the right value for
     ok(defined(${"Foo::foo"}), '... the $foo slot has NOT been removed');
 }
 
-ok(!exception {
+is(exception {
     $foo_stash->remove_package_symbol('&foo');
-}, '... removed &Foo::foo successfully');
+}, undef, '... removed &Foo::foo successfully');
 
 ok(!$foo_stash->has_package_symbol('&foo'), '... the &foo slot no longer exists');
 
@@ -207,9 +208,9 @@ is($foo_stash->get_package_symbol('$foo'), $SCALAR, '... got the right value for
     ok(defined(${"Foo::foo"}), '... the $foo slot has NOT been removed');
 }
 
-ok(!exception {
+is(exception {
     $foo_stash->remove_package_symbol('$foo');
-}, '... removed $Foo::foo successfully');
+}, undef, '... removed $Foo::foo successfully');
 
 ok(!$foo_stash->has_package_symbol('$foo'), '... the $foo slot no longer exists');
 
@@ -227,26 +228,26 @@ is($foo_stash->get_package_symbol('@foo'), $ARRAY, '... got the right values for
 
 # check some errors
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('@bar', {})
-}, "can't initialize a slot with the wrong type of value");
+}, qr/HASH.*is not of type ARRAY/, "can't initialize a slot with the wrong type of value");
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('bar', [])
-}, "can't initialize a slot with the wrong type of value");
+}, qr/ARRAY.*is not of type IO/, "can't initialize a slot with the wrong type of value");
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('$bar', sub { })
-}, "can't initialize a slot with the wrong type of value");
+}, qr/CODE.*is not of type SCALAR/, "can't initialize a slot with the wrong type of value");
 
 {
     package Bar;
     open *foo, '<', $0;
 }
 
-ok(exception {
+like(exception {
     $foo_stash->add_package_symbol('$bar', *Bar::foo{IO})
-}, "can't initialize a slot with the wrong type of value");
+}, qr/IO.*is not of type SCALAR/, "can't initialize a slot with the wrong type of value");
 
 # check compile time manipulation
 

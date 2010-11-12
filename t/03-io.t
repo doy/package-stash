@@ -40,9 +40,9 @@ use Package::Stash;
 
 {
     my $stash = Package::Stash->new('Baz');
-    ok(!exception {
+    is(exception {
         $stash->add_package_symbol('baz', *Foo::foo{IO});
-    }, "can add an IO symbol");
+    }, undef, "can add an IO symbol");
     ok($stash->has_package_symbol('baz'), "has baz");
     is($stash->get_package_symbol('baz'), *Foo::foo{IO}, "got the right baz");
 }
