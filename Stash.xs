@@ -375,7 +375,7 @@ add_package_symbol(self, variable, initial=NULL, ...)
     }
 */
 
-    glob = gv_fetchsv(name, GV_ADD, vartype_to_svtype(variable.type));
+    glob = gv_fetchsv(name, GV_ADDMULTI, vartype_to_svtype(variable.type));
 
     if (initial) {
         SV *val;
