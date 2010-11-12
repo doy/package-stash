@@ -19,6 +19,42 @@ typedef struct {
     char *name;
 } varspec_t;
 
+const char *vartype_to_string(vartype_t type)
+{
+    switch (type) {
+    case VAR_SCALAR:
+        return "SCALAR";
+    case VAR_ARRAY:
+        return "ARRAY";
+    case VAR_HASH:
+        return "HASH";
+    case VAR_CODE:
+        return "CODE";
+    case VAR_IO:
+        return "IO";
+    default:
+        return "unknown";
+    }
+}
+
+I32 vartype_to_svtype(vartype_t type)
+{
+    switch (type) {
+    case VAR_SCALAR:
+        return SVt_PV; /* or whatever */
+    case VAR_ARRAY:
+        return SVt_PVAV;
+    case VAR_HASH:
+        return SVt_PVHV;
+    case VAR_CODE:
+        return SVt_PVCV;
+    case VAR_IO:
+        return SVt_PVIO;
+    default:
+        return SVt_NULL;
+    }
+}
+
 vartype_t string_to_vartype(char *vartype)
 {
     if (strEQ(vartype, "SCALAR")) {
@@ -116,7 +152,7 @@ int _valid_for_type(SV *value, vartype_t type)
     case VAR_CODE:
         return sv_type == SVt_PVCV;
     case VAR_IO:
-        return sv_type == SVt_PVGV;
+        return sv_type == SVt_PVIO;
     default:
         return 0;
     }
@@ -138,6 +174,24 @@ HV *_get_namespace(SV *self)
     PUTBACK;
 
     return (HV*)SvRV(ret);
+}
+
+SV *_get_name(SV *self)
+{
+    dSP;
+    SV *ret;
+
+    PUSHMARK(SP);
+    XPUSHs(self);
+    PUTBACK;
+
+    call_method("name", G_SCALAR);
+
+    SPAGAIN;
+    ret = POPs;
+    PUTBACK;
+
+    return ret;
 }
 
 MODULE = Package::Stash  PACKAGE = Package::Stash
@@ -190,6 +244,102 @@ namespace(self)
     RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
   OUTPUT:
     RETVAL
+
+void
+add_package_symbol(self, variable, initial=NULL, ...)
+    SV *self
+    varspec_t variable
+    SV *initial
+  PREINIT:
+    SV *name;
+    GV *glob;
+  CODE:
+    if (initial && !_valid_for_type(initial, variable.type))
+        croak("%s is not of type %s",
+              SvPV_nolen(initial), vartype_to_string(variable.type));
+
+    name = newSVsv(_get_name(self));
+    sv_catpvs(name, "::");
+    sv_catpv(name, variable.name);
+
+    /* XXX: come back to this when i feel like reimplementing caller() */
+/*
+    my $filename = $opts{filename};
+    my $first_line_num = $opts{first_line_num};
+
+    (undef, $filename, $first_line_num) = caller
+        if not defined $filename;
+
+    my $last_line_num = $opts{last_line_num} || ($first_line_num ||= 0);
+
+    # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
+    $DB::sub{$pkg . '::' . $name} = "$filename:$first_line_num-$last_line_num";
+*/
+/*
+    if (items > 2 && (PL_perldb & 0x10) && variable.type == VAR_CODE) {
+        int i;
+        char *filename = NULL, *name;
+        I32 first_line_num, last_line_num;
+
+        if ((items - 3) % 2)
+            croak("add_package_symbol: Odd number of elements in %%opts");
+
+        for (i = 3; i < items; i += 2) {
+            char *key;
+            key = SvPV_nolen(ST(i));
+            if (strEQ(key, "filename")) {
+                if (!SvPOK(ST(i + 1)))
+                    croak("add_package_symbol: filename must be a string");
+                filename = SvPV_nolen(ST(i + 1));
+            }
+            else if (strEQ(key, "first_line_num")) {
+                if (!SvIOK(ST(i + 1)))
+                    croak("add_package_symbol: first_line_num must be an integer");
+                first_line_num = SvIV(ST(i + 1));
+            }
+            else if (strEQ(key, "last_line_num")) {
+                if (!SvIOK(ST(i + 1)))
+                    croak("add_package_symbol: last_line_num must be an integer");
+                last_line_num = SvIV(ST(i + 1));
+            }
+        }
+
+        if (!filename) {
+        }
+    }
+*/
+
+    glob = gv_fetchsv(name, GV_ADD, vartype_to_svtype(variable.type));
+
+    if (initial) {
+        SV *val;
+
+        if (SvROK(initial)) {
+            val = SvRV(initial);
+            SvREFCNT_inc(val);
+        }
+        else {
+            val = newSVsv(initial);
+        }
+
+        switch (variable.type) {
+        case VAR_SCALAR:
+            GvSV(glob) = val;
+            break;
+        case VAR_ARRAY:
+            GvAV(glob) = (AV*)val;
+            break;
+        case VAR_HASH:
+            GvHV(glob) = (HV*)val;
+            break;
+        case VAR_CODE:
+            GvCV(glob) = (CV*)val;
+            break;
+        case VAR_IO:
+            GvIOp(glob) = (IO*)val;
+            break;
+        }
+    }
 
 void
 remove_package_glob(self, name)
@@ -266,7 +416,7 @@ remove_package_symbol(self, variable)
             GvCV(glob) = Nullcv;
             break;
         case VAR_IO:
-            GvIOp(glob) = Null(struct io*);
+            GvIOp(glob) = Null(IO*);
             break;
         }
     }

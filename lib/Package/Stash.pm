@@ -107,54 +107,6 @@ determine where the source code for a subroutine can be found.  See
 L<http://perldoc.perl.org/perldebguts.html#Debugger-Internals> for more
 information about C<%DB::sub>.
 
-=cut
-
-sub _valid_for_type {
-    my $self = shift;
-    my ($value, $type) = @_;
-    if ($type eq 'HASH' || $type eq 'ARRAY'
-     || $type eq 'IO'   || $type eq 'CODE') {
-        return reftype($value) eq $type;
-    }
-    else {
-        my $ref = reftype($value);
-        return !defined($ref) || $ref eq 'SCALAR' || $ref eq 'REF' || $ref eq 'LVALUE';
-    }
-}
-
-sub add_package_symbol {
-    my ($self, $variable, $initial_value, %opts) = @_;
-
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
-
-    my $pkg = $self->name;
-
-    if (@_ > 2) {
-        $self->_valid_for_type($initial_value, $type)
-            || confess "$initial_value is not of type $type";
-
-        # cheap fail-fast check for PERLDBf_SUBLINE and '&'
-        if ($^P and $^P & 0x10 && $sigil eq '&') {
-            my $filename = $opts{filename};
-            my $first_line_num = $opts{first_line_num};
-
-            (undef, $filename, $first_line_num) = caller
-                if not defined $filename;
-
-            my $last_line_num = $opts{last_line_num} || ($first_line_num ||= 0);
-
-            # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
-            $DB::sub{$pkg . '::' . $name} = "$filename:$first_line_num-$last_line_num";
-        }
-    }
-
-    no strict 'refs';
-    no warnings 'redefine', 'misc', 'prototype';
-    *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
-}
-
 =method remove_package_glob $name
 
 Removes all package variables with the given name, regardless of sigil.
