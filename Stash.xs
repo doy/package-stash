@@ -22,6 +22,8 @@ HV *_get_namespace(SV *self)
 
 MODULE = Package::Stash  PACKAGE = Package::Stash
 
+PROTOTYPES: DISABLE
+
 SV*
 new(class, package_name)
     char *class
