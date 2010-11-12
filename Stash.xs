@@ -120,6 +120,7 @@ void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
         croak("The 'name' key is required in variable specs");
 
     varspec->name = savesvpv(*val);
+    SAVEFREEPV(varspec->name);
 
     val = hv_fetch(variable, "sigil", 5, 0);
     if (!val)
