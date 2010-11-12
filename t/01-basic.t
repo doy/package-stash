@@ -324,4 +324,45 @@ ok(exception {
     }
 }
 
+{
+    package Quuux;
+    our $foo = 1;
+    our @foo;
+    our @bar;
+    our %baz;
+    sub baz { }
+    use constant quux => 1;
+    use constant quuux => [];
+    sub quuuux;
+}
+
+{
+    my $quuux = Package::Stash->new('Quuux');
+    is_deeply(
+        [sort $quuux->list_all_package_symbols],
+        [qw(BEGIN bar baz foo quuuux quuux quux)],
+        "list_all_package_symbols",
+    );
+    is_deeply(
+        [sort $quuux->list_all_package_symbols('SCALAR')],
+        [qw(foo)],
+        "list_all_package_symbols SCALAR",
+    );
+    is_deeply(
+        [sort $quuux->list_all_package_symbols('ARRAY')],
+        [qw(bar foo)],
+        "list_all_package_symbols ARRAY",
+    );
+    is_deeply(
+        [sort $quuux->list_all_package_symbols('HASH')],
+        [qw(baz)],
+        "list_all_package_symbols HASH",
+    );
+    is_deeply(
+        [sort $quuux->list_all_package_symbols('CODE')],
+        [qw(baz quuuux quuux quux)],
+        "list_all_package_symbols CODE",
+    );
+}
+
 done_testing;

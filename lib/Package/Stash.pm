@@ -381,7 +381,9 @@ sub remove_package_symbol {
 Returns a list of package variable names in the package, without sigils. If a
 C<type_filter> is passed, it is used to select package variables of a given
 type, where valid types are the slots of a typeglob ('SCALAR', 'CODE', 'HASH',
-etc).
+etc). Note that if the package contained any C<BEGIN> blocks, perl will leave
+an empty typeglob in the C<BEGIN> slot, so this will show up if no filter is
+used (and similarly for C<INIT>, C<END>, etc).
 
 =cut
 
@@ -399,10 +401,20 @@ sub list_all_package_symbols {
             # any non-typeglob in the symbol table is a constant or stub
             ref(\$namespace->{$_}) ne 'GLOB'
                 # regular subs are stored in the CODE slot of the typeglob
-                || defined(*{$namespace->{$_}}{CODE});
+                || defined(*{$namespace->{$_}}{CODE})
         } keys %{$namespace};
-    } else {
-        return grep { *{$namespace->{$_}}{$type_filter} } keys %{$namespace};
+    }
+    elsif ($type_filter eq 'SCALAR') {
+        return grep {
+            ref(\$namespace->{$_}) eq 'GLOB'
+                && defined(${*{$namespace->{$_}}{'SCALAR'}})
+        } keys %{$namespace};
+    }
+    else {
+        return grep {
+            ref(\$namespace->{$_}) eq 'GLOB'
+                && defined(*{$namespace->{$_}}{$type_filter})
+        } keys %{$namespace};
     }
 }
 
