@@ -387,6 +387,65 @@ has_package_symbol(self, variable)
   OUTPUT:
     RETVAL
 
+SV*
+get_package_symbol(self, variable, ...)
+    SV *self
+    varspec_t variable
+  PREINIT:
+    HV *namespace;
+    SV **entry;
+  CODE:
+    namespace = _get_namespace(self);
+
+    if (!hv_exists(namespace, variable.name, strlen(variable.name))) {
+        int i, vivify = 0;
+        if ((items - 2) % 2)
+            croak("get_package_symbol: Odd number of elements in %%opts");
+
+        for (i = 2; i < items; i += 2) {
+            char *key;
+            key = SvPV_nolen(ST(i));
+            if (strEQ(key, "vivify")) {
+                vivify = SvTRUE(ST(i + 1));
+            }
+        }
+
+        if (vivify) {
+            /* XXX: vivify */
+        }
+    }
+
+    entry = hv_fetch(namespace, variable.name, strlen(variable.name), 0);
+    if (!entry)
+        XSRETURN_UNDEF;
+
+    if (isGV(*entry)) {
+        GV *glob = (GV*)(*entry);
+        switch (variable.type) {
+        case VAR_SCALAR:
+            RETVAL = newRV(GvSV(glob));
+            break;
+        case VAR_ARRAY:
+            RETVAL = newRV((SV*)GvAV(glob));
+            break;
+        case VAR_HASH:
+            RETVAL = newRV((SV*)GvHV(glob));
+            break;
+        case VAR_CODE:
+            RETVAL = newRV((SV*)GvCV(glob));
+            break;
+        case VAR_IO:
+            RETVAL = newRV((SV*)GvIO(glob));
+            break;
+        }
+    }
+    else {
+        /* XXX: need to expand code slots */
+        XSRETURN_UNDEF;
+    }
+  OUTPUT:
+    RETVAL
+
 void
 remove_package_symbol(self, variable)
     SV *self

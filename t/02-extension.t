@@ -23,7 +23,7 @@ use Test::Fatal;
     sub add_package_symbol {
         my ($self, $variable, $initial_value) = @_;
 
-        my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
+        (my $name = $variable) =~ s/^[\$\@\%\&]//;
 
         my $glob = gensym();
         *{$glob} = $initial_value if defined $initial_value;

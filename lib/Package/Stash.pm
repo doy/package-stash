@@ -55,6 +55,8 @@ Returns the raw stash itself.
 
 =cut
 
+=pod
+
 {
     my %SIGIL_MAP = (
         '$' => 'SCALAR',
@@ -80,6 +82,8 @@ Returns the raw stash itself.
         }
     }
 }
+
+=cut
 
 =method add_package_symbol $variable $value %opts
 
@@ -120,6 +124,8 @@ Returns whether or not the given package variable (including sigil) exists.
 Returns the value of the given package variable (including sigil).
 
 =cut
+
+=pod
 
 sub get_package_symbol {
     my ($self, $variable, %opts) = @_;
@@ -185,6 +191,8 @@ sub get_package_symbol {
         }
     }
 }
+
+=cut
 
 =method get_or_add_package_symbol $variable
 
