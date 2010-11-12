@@ -24,9 +24,7 @@ use Package::Stash;
 }
 
 my $stash = Package::Stash->new('Foo');
-{ local $TODO = "i think this is a perl bug (see comment in has_package_symbol)";
 ok($stash->has_package_symbol('$SCALAR'), '$SCALAR');
-}
 ok($stash->has_package_symbol('$SCALAR_WITH_VALUE'), '$SCALAR_WITH_VALUE');
 ok($stash->has_package_symbol('@ARRAY'), '@ARRAY');
 ok($stash->has_package_symbol('%HASH'), '%HASH');

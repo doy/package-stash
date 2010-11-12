@@ -198,6 +198,45 @@ remove_package_glob(self, name)
   CODE:
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
 
+int
+has_package_symbol(self, variable)
+    SV *self
+    varspec_t variable
+  PREINIT:
+    HV *namespace;
+    SV **entry;
+  CODE:
+    namespace = _get_namespace(self);
+    entry = hv_fetch(namespace, variable.name, strlen(variable.name), 0);
+    if (!entry)
+        XSRETURN_UNDEF;
+
+    if (isGV(*entry)) {
+        GV *glob = (GV*)(*entry);
+        switch (variable.type) {
+        case VAR_SCALAR:
+            RETVAL = GvSV(glob) ? 1 : 0;
+            break;
+        case VAR_ARRAY:
+            RETVAL = GvAV(glob) ? 1 : 0;
+            break;
+        case VAR_HASH:
+            RETVAL = GvHV(glob) ? 1 : 0;
+            break;
+        case VAR_CODE:
+            RETVAL = GvCV(glob) ? 1 : 0;
+            break;
+        case VAR_IO:
+            RETVAL = GvIO(glob) ? 1 : 0;
+            break;
+        }
+    }
+    else {
+        RETVAL = (variable.type == VAR_CODE);
+    }
+  OUTPUT:
+    RETVAL
+
 void
 remove_package_symbol(self, variable)
     SV *self

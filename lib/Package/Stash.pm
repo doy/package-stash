@@ -163,39 +163,6 @@ Removes all package variables with the given name, regardless of sigil.
 
 Returns whether or not the given package variable (including sigil) exists.
 
-=cut
-
-sub has_package_symbol {
-    my ($self, $variable) = @_;
-
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
-
-    my $namespace = $self->namespace;
-
-    return unless exists $namespace->{$name};
-
-    my $entry_ref = \$namespace->{$name};
-    if (reftype($entry_ref) eq 'GLOB') {
-        # XXX: assigning to any typeglob slot also initializes the SCALAR slot,
-        # and saying that an undef scalar variable doesn't exist is probably
-        # vaguely less surprising than a scalar variable popping into existence
-        # without anyone defining it
-        if ($type eq 'SCALAR') {
-            return defined ${ *{$entry_ref}{$type} };
-        }
-        else {
-            return defined *{$entry_ref}{$type};
-        }
-    }
-    else {
-        # a symbol table entry can be -1 (stub), string (stub with prototype),
-        # or reference (constant)
-        return $type eq 'CODE';
-    }
-}
-
 =method get_package_symbol $variable
 
 Returns the value of the given package variable (including sigil).
