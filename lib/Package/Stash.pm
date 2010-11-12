@@ -45,27 +45,15 @@ a sigil. If this sigil is absent, it is assumed to represent the IO slot.
 Creates a new C<Package::Stash> object, for the package given as the only
 argument.
 
-=cut
-
 =method name
 
 Returns the name of the package that this object represents.
-
-=cut
-
-sub name {
-    return $_[0]->{name};
-}
 
 =method namespace
 
 Returns the raw stash itself.
 
 =cut
-
-sub namespace {
-    return $_[0]->{namespace};
-}
 
 {
     my %SIGIL_MAP = (

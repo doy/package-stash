@@ -24,3 +24,29 @@ new(class, package_name)
     RETVAL = sv_bless(newRV((SV*)instance), gv_stashpv(class, 0));
   OUTPUT:
     RETVAL
+
+SV*
+name(self)
+    SV *self
+  INIT:
+    SV **slot;
+  CODE:
+    if (!sv_isobject(self))
+        croak("Can't call name as a class method");
+    slot = hv_fetch((HV*)SvRV(self), "name", 4, 0);
+    RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
+  OUTPUT:
+    RETVAL
+
+SV*
+namespace(self)
+    SV *self
+  INIT:
+    SV **slot;
+  CODE:
+    if (!sv_isobject(self))
+        croak("Can't call namespace as a class method");
+    slot = hv_fetch((HV*)SvRV(self), "namespace", 9, 0);
+    RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
+  OUTPUT:
+    RETVAL
