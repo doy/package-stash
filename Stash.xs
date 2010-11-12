@@ -195,6 +195,73 @@ SV *_get_name(SV *self)
     return ret;
 }
 
+SV *_get_package_symbol(SV *self, varspec_t *variable, int vivify)
+{
+    HV *namespace;
+    SV **entry;
+    GV *glob;
+
+    namespace = _get_namespace(self);
+    entry = hv_fetch(namespace, variable->name, strlen(variable->name), vivify);
+    if (!entry)
+        return NULL;
+
+    glob = (GV*)(*entry);
+    if (!isGV(glob)) {
+        SV *namesv;
+        char *name;
+        STRLEN len;
+
+        namesv = newSVsv(_get_name(self));
+        sv_catpvs(namesv, "::");
+        sv_catpv(namesv, variable->name);
+
+        name = SvPV(namesv, len);
+
+        gv_init(glob, namespace, name, len, 1);
+    }
+
+    if (vivify) {
+        switch (variable->type) {
+        case VAR_SCALAR:
+            if (!GvSV(glob))
+                GvSV(glob) = newSV(0);
+            break;
+        case VAR_ARRAY:
+            if (!GvAV(glob))
+                GvAV(glob) = newAV();
+            break;
+        case VAR_HASH:
+            if (!GvHV(glob))
+                GvHV(glob) = newHV();
+            break;
+        case VAR_CODE:
+            croak("Don't know how to vivify CODE variables");
+        case VAR_IO:
+            if (!GvIO(glob))
+                GvIOp(glob) = newIO();
+            break;
+        default:
+            croak("Unknown type in vivication");
+        }
+    }
+
+    switch (variable->type) {
+    case VAR_SCALAR:
+        return GvSV(glob);
+    case VAR_ARRAY:
+        return (SV*)GvAV(glob);
+    case VAR_HASH:
+        return (SV*)GvHV(glob);
+    case VAR_CODE:
+        return (SV*)GvCV(glob);
+    case VAR_IO:
+        return (SV*)GvIO(glob);
+    default:
+        return NULL;
+    }
+}
+
 MODULE = Package::Stash  PACKAGE = Package::Stash
 
 PROTOTYPES: DISABLE
@@ -389,93 +456,29 @@ has_package_symbol(self, variable)
     RETVAL
 
 SV*
-get_package_symbol(self, variable, ...)
+get_package_symbol(self, variable)
     SV *self
     varspec_t variable
   PREINIT:
-    HV *namespace;
-    SV **entry;
-    GV *glob;
-    int i, vivify = 0;
     SV *val;
   CODE:
-    if (items > 2 && (items - 2) % 2)
-        croak("get_package_symbol: Odd number of elements in %%opts");
-
-    for (i = 2; i < items; i += 2) {
-        char *key;
-        key = SvPV_nolen(ST(i));
-        if (strEQ(key, "vivify")) {
-            vivify = SvTRUE(ST(i + 1));
-        }
-    }
-
-    namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable.name, strlen(variable.name), vivify);
-    if (!entry)
-        XSRETURN_UNDEF;
-
-    glob = (GV*)(*entry);
-    if (!isGV(glob)) {
-        SV *namesv;
-        char *name;
-        STRLEN len;
-
-        namesv = newSVsv(_get_name(self));
-        sv_catpvs(namesv, "::");
-        sv_catpv(namesv, variable.name);
-
-        name = SvPV(namesv, len);
-
-        gv_init(glob, namespace, name, len, 1);
-    }
-
-    if (vivify) {
-        switch (variable.type) {
-        case VAR_SCALAR:
-            if (!GvSV(glob))
-                GvSV(glob) = newSV(0);
-            break;
-        case VAR_ARRAY:
-            if (!GvAV(glob))
-                GvAV(glob) = newAV();
-            break;
-        case VAR_HASH:
-            if (!GvHV(glob))
-                GvHV(glob) = newHV();
-            break;
-        case VAR_CODE:
-            croak("Don't know how to vivify CODE variables");
-        case VAR_IO:
-            if (!GvIO(glob))
-                GvIOp(glob) = newIO();
-            break;
-        default:
-            croak("Unknown type in vivication");
-        }
-    }
-
-    switch (variable.type) {
-    case VAR_SCALAR:
-        val = GvSV(glob);
-        break;
-    case VAR_ARRAY:
-        val = (SV*)GvAV(glob);
-        break;
-    case VAR_HASH:
-        val = (SV*)GvHV(glob);
-        break;
-    case VAR_CODE:
-        val = (SV*)GvCV(glob);
-        break;
-    case VAR_IO:
-        val = (SV*)GvIO(glob);
-        break;
-    }
-
+    val = _get_package_symbol(self, &variable, 0);
     if (!val)
         XSRETURN_UNDEF;
+    RETVAL = newRV(val);
+  OUTPUT:
+    RETVAL
 
+SV*
+get_or_add_package_symbol(self, variable)
+    SV *self
+    varspec_t variable
+  PREINIT:
+    SV *val;
+  CODE:
+    val = _get_package_symbol(self, &variable, 1);
+    if (!val)
+        XSRETURN_UNDEF;
     RETVAL = newRV(val);
   OUTPUT:
     RETVAL

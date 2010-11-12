@@ -88,13 +88,6 @@ Returns the value of the given package variable (including sigil).
 Like C<get_package_symbol>, except that it will return an empty hashref or
 arrayref if the variable doesn't exist.
 
-=cut
-
-sub get_or_add_package_symbol {
-    my $self = shift;
-    $self->get_package_symbol(@_, vivify => 1);
-}
-
 =method remove_package_symbol $variable
 
 Removes the package variable described by C<$variable> (which includes the
