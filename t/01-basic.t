@@ -326,7 +326,7 @@ ok(exception {
 
 {
     package Quuux;
-    our $foo = 1;
+    our $foo;
     our @foo;
     our @bar;
     our %baz;
