@@ -148,7 +148,7 @@ SV*
 new(class, package_name)
     char *class
     SV *package_name
-  INIT:
+  PREINIT:
     HV *instance;
     HV *namespace;
   CODE:
@@ -168,7 +168,7 @@ new(class, package_name)
 SV*
 name(self)
     SV *self
-  INIT:
+  PREINIT:
     SV **slot;
   CODE:
     if (!sv_isobject(self))
@@ -181,7 +181,7 @@ name(self)
 SV*
 namespace(self)
     SV *self
-  INIT:
+  PREINIT:
     SV **slot;
   CODE:
     if (!sv_isobject(self))
@@ -195,7 +195,7 @@ void
 remove_package_glob(self, name)
     SV *self
     char *name
-  INIT:
+  PREINIT:
     HV *namespace;
   CODE:
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
