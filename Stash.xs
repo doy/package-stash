@@ -201,6 +201,45 @@ remove_package_glob(self, name)
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
 
 void
+remove_package_symbol(self, variable)
+    SV *self
+    varspec_t variable
+  PREINIT:
+    HV *namespace;
+    SV **entry;
+  CODE:
+    namespace = _get_namespace(self);
+    entry = hv_fetch(namespace, variable.name, strlen(variable.name), 0);
+    if (!entry)
+        XSRETURN_EMPTY;
+
+    if (isGV(*entry)) {
+        GV *glob = (GV*)(*entry);
+        switch (variable.type) {
+        case VAR_SCALAR:
+            GvSV(glob) = Nullsv;
+            break;
+        case VAR_ARRAY:
+            GvAV(glob) = Nullav;
+            break;
+        case VAR_HASH:
+            GvHV(glob) = Nullhv;
+            break;
+        case VAR_CODE:
+            GvCV(glob) = Nullcv;
+            break;
+        case VAR_IO:
+            GvIOp(glob) = Null(struct io*);
+            break;
+        }
+    }
+    else {
+        if (variable.type == VAR_CODE) {
+            hv_delete(namespace, variable.name, strlen(variable.name), G_DISCARD);
+        }
+    }
+
+void
 list_all_package_symbols(self, vartype=VAR_NONE)
     SV *self
     vartype_t vartype
