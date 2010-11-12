@@ -209,16 +209,14 @@ SV *_get_package_symbol(SV *self, varspec_t *variable, int vivify)
     glob = (GV*)(*entry);
     if (!isGV(glob)) {
         SV *namesv;
-        char *name;
-        STRLEN len;
 
         namesv = newSVsv(_get_name(self));
         sv_catpvs(namesv, "::");
         sv_catpv(namesv, variable->name);
 
-        name = SvPV(namesv, len);
-
-        gv_init(glob, namespace, name, len, 1);
+        /* can't use gv_init here, because it screws up @ISA in a way that I
+         * can't reproduce, but that CMOP triggers */
+        gv_fetchsv(namesv, GV_ADD, vartype_to_svtype(variable->type));
     }
 
     if (vivify) {
