@@ -204,12 +204,7 @@ sub has_package_symbol {
 
     my $entry_ref = \$namespace->{$name};
     if (reftype($entry_ref) eq 'GLOB') {
-        if ( $type eq 'SCALAR' ) {
-            return defined ${ *{$entry_ref}{SCALAR} };
-        }
-        else {
-            return defined *{$entry_ref}{$type};
-        }
+        return defined *{$entry_ref}{$type};
     }
     else {
         # a symbol table entry can be -1 (stub), string (stub with prototype),
@@ -392,10 +387,10 @@ sub list_all_package_symbols {
     # type (SCALAR|ARRAY|HASH|CODE)
     if ($type_filter eq 'CODE') {
         return grep {
-            (ref($namespace->{$_})
-                ? (ref($namespace->{$_}) eq 'SCALAR')
-                : (ref(\$namespace->{$_}) eq 'GLOB'
-                   && defined(*{$namespace->{$_}}{CODE})));
+            # any non-typeglob in the symbol table is a constant or stub
+            ref(\$namespace->{$_}) ne 'GLOB'
+                # regular subs are stored in the CODE slot of the typeglob
+                || defined(*{$namespace->{$_}}{CODE});
         } keys %{$namespace};
     } else {
         return grep { *{$namespace->{$_}}{$type_filter} } keys %{$namespace};
