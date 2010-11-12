@@ -359,39 +359,6 @@ etc). Note that if the package contained any C<BEGIN> blocks, perl will leave
 an empty typeglob in the C<BEGIN> slot, so this will show up if no filter is
 used (and similarly for C<INIT>, C<END>, etc).
 
-=cut
-
-sub list_all_package_symbols {
-    my ($self, $type_filter) = @_;
-
-    my $namespace = $self->namespace;
-    return keys %{$namespace} unless defined $type_filter;
-
-    # NOTE:
-    # or we can filter based on
-    # type (SCALAR|ARRAY|HASH|CODE)
-    if ($type_filter eq 'CODE') {
-        return grep {
-            # any non-typeglob in the symbol table is a constant or stub
-            ref(\$namespace->{$_}) ne 'GLOB'
-                # regular subs are stored in the CODE slot of the typeglob
-                || defined(*{$namespace->{$_}}{CODE})
-        } keys %{$namespace};
-    }
-    elsif ($type_filter eq 'SCALAR') {
-        return grep {
-            ref(\$namespace->{$_}) eq 'GLOB'
-                && defined(${*{$namespace->{$_}}{'SCALAR'}})
-        } keys %{$namespace};
-    }
-    else {
-        return grep {
-            ref(\$namespace->{$_}) eq 'GLOB'
-                && defined(*{$namespace->{$_}}{$type_filter})
-        } keys %{$namespace};
-    }
-}
-
 =head1 BUGS
 
 No known bugs.

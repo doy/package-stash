@@ -199,3 +199,61 @@ remove_package_glob(self, name)
     HV *namespace;
   CODE:
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
+
+void
+list_all_package_symbols(self, vartype=VAR_NONE)
+    SV *self
+    vartype_t vartype
+  PPCODE:
+    if (vartype == VAR_NONE) {
+        HV *namespace;
+        HE *entry;
+        int keys;
+
+        namespace = _get_namespace(self);
+        keys = hv_iterinit(namespace);
+        EXTEND(SP, keys);
+        while (entry = hv_iternext(namespace)) {
+            mPUSHs(newSVhek(HeKEY_hek(entry)));
+        }
+    }
+    else {
+        HV *namespace;
+        HE *entry;
+        SV *val;
+        char *key;
+        int len;
+
+        namespace = _get_namespace(self);
+        hv_iterinit(namespace);
+        while (val = hv_iternextsv(namespace, &key, &len)) {
+            GV *gv = (GV*)val;
+            if (isGV(gv)) {
+                switch (vartype) {
+                case VAR_SCALAR:
+                    if (GvSV(val))
+                        mXPUSHp(key, len);
+                    break;
+                case VAR_ARRAY:
+                    if (GvAV(val))
+                        mXPUSHp(key, len);
+                    break;
+                case VAR_HASH:
+                    if (GvHV(val))
+                        mXPUSHp(key, len);
+                    break;
+                case VAR_CODE:
+                    if (GvCVu(val))
+                        mXPUSHp(key, len);
+                    break;
+                case VAR_IO:
+                    if (GvIO(val))
+                        mXPUSHp(key, len);
+                    break;
+                }
+            }
+            else if (vartype == VAR_CODE) {
+                mXPUSHp(key, len);
+            }
+        }
+    }
