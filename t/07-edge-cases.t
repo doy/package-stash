@@ -39,4 +39,7 @@ ok(!$stash->has_package_symbol('$added'), '$added');
 ok(!$stash->has_package_symbol('@added'), '@added');
 ok($stash->has_package_symbol('%added'), '%added');
 
+my $constant = $stash->get_package_symbol('&FOO');
+is(ref($constant), 'CODE', "expanded a constant into a coderef");
+
 done_testing;

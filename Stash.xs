@@ -394,6 +394,7 @@ get_package_symbol(self, variable, ...)
   PREINIT:
     HV *namespace;
     SV **entry;
+    GV *glob;
   CODE:
     namespace = _get_namespace(self);
 
@@ -419,29 +420,38 @@ get_package_symbol(self, variable, ...)
     if (!entry)
         XSRETURN_UNDEF;
 
-    if (isGV(*entry)) {
-        GV *glob = (GV*)(*entry);
-        switch (variable.type) {
-        case VAR_SCALAR:
-            RETVAL = newRV(GvSV(glob));
-            break;
-        case VAR_ARRAY:
-            RETVAL = newRV((SV*)GvAV(glob));
-            break;
-        case VAR_HASH:
-            RETVAL = newRV((SV*)GvHV(glob));
-            break;
-        case VAR_CODE:
-            RETVAL = newRV((SV*)GvCV(glob));
-            break;
-        case VAR_IO:
-            RETVAL = newRV((SV*)GvIO(glob));
-            break;
-        }
+    glob = (GV*)(*entry);
+
+    if (!isGV(*entry)) {
+        SV *namesv;
+        char *name;
+        int len;
+
+        namesv = newSVsv(_get_name(self));
+        sv_catpvs(namesv, "::");
+        sv_catpv(namesv, variable.name);
+
+        name = SvPV(namesv, len);
+
+        gv_init(glob, namespace, name, len, 1);
     }
-    else {
-        /* XXX: need to expand code slots */
-        XSRETURN_UNDEF;
+
+    switch (variable.type) {
+    case VAR_SCALAR:
+        RETVAL = newRV(GvSV(glob));
+        break;
+    case VAR_ARRAY:
+        RETVAL = newRV((SV*)GvAV(glob));
+        break;
+    case VAR_HASH:
+        RETVAL = newRV((SV*)GvHV(glob));
+        break;
+    case VAR_CODE:
+        RETVAL = newRV((SV*)GvCV(glob));
+        break;
+    case VAR_IO:
+        RETVAL = newRV((SV*)GvIO(glob));
+        break;
     }
   OUTPUT:
     RETVAL
