@@ -10,3 +10,6 @@ MANIFEST.bak
 *.sw[po]
 .build
 Package-Stash-*
+*.bs
+*.c
+*.o

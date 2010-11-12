@@ -6,6 +6,18 @@ use warnings;
 use Carp qw(confess);
 use Scalar::Util qw(reftype);
 use Symbol;
+
+use XSLoader;
+XSLoader::load(
+    __PACKAGE__,
+    # we need to be careful not to touch $VERSION at compile time, otherwise
+    # DynaLoader will assume it's set and check against it, which will cause
+    # fail when being run in the checkout without dzil having set the actual
+    # $VERSION
+    exists $Package::Stash::{VERSION}
+        ? ${ $Package::Stash::{VERSION} } : (),
+);
+
 # before 5.12, assigning to the ISA glob would make it lose its magical ->isa
 # powers
 use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
@@ -35,22 +47,6 @@ argument.
 
 =cut
 
-sub new {
-    my $class = shift;
-    my ($package) = @_;
-    my $namespace;
-    {
-        no strict 'refs';
-        # supposedly this caused a bug in earlier perls, but I can't reproduce
-        # it, so re-enabling the caching
-        $namespace = \%{$package . '::'};
-    }
-    return bless {
-        'package'   => $package,
-        'namespace' => $namespace,
-    }, $class;
-}
-
 =method name
 
 Returns the name of the package that this object represents.
@@ -58,7 +54,7 @@ Returns the name of the package that this object represents.
 =cut
 
 sub name {
-    return $_[0]->{package};
+    return $_[0]->{name};
 }
 
 =method namespace
