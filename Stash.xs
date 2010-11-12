@@ -2,6 +2,126 @@
 #include "perl.h"
 #include "XSUB.h"
 
+typedef enum {
+    VAR_NONE = 0,
+    VAR_SCALAR,
+    VAR_ARRAY,
+    VAR_HASH,
+    VAR_CODE,
+    VAR_IO,
+    VAR_GLOB,  /* TODO: unimplemented */
+    VAR_FORMAT /* TODO: unimplemented */
+} vartype_t;
+
+typedef struct {
+    vartype_t type;
+    char sigil;
+    char *name;
+} varspec_t;
+
+vartype_t string_to_vartype(char *vartype)
+{
+    if (strEQ(vartype, "SCALAR")) {
+        return VAR_SCALAR;
+    }
+    else if (strEQ(vartype, "ARRAY")) {
+        return VAR_ARRAY;
+    }
+    else if (strEQ(vartype, "HASH")) {
+        return VAR_HASH;
+    }
+    else if (strEQ(vartype, "CODE")) {
+        return VAR_CODE;
+    }
+    else if (strEQ(vartype, "IO")) {
+        return VAR_IO;
+    }
+    else {
+        croak("Type must be one of 'SCALAR', 'ARRAY', 'HASH', 'CODE', or 'IO'");
+    }
+}
+
+void _deconstruct_variable_name(char *variable, varspec_t *varspec)
+{
+    if (!variable || !variable[0])
+        croak("You must pass a variable name");
+
+    varspec->type = VAR_NONE;
+
+    switch (variable[0]) {
+    case '$':
+        varspec->type = VAR_SCALAR;
+        break;
+    case '@':
+        varspec->type = VAR_ARRAY;
+        break;
+    case '%':
+        varspec->type = VAR_HASH;
+        break;
+    case '&':
+        varspec->type = VAR_CODE;
+        break;
+    }
+
+    if (varspec->type != VAR_NONE) {
+        varspec->sigil = variable[0];
+        varspec->name = &variable[1];
+    }
+    else {
+        varspec->type = VAR_IO;
+        varspec->sigil = '\0';
+        varspec->name = variable;
+    }
+}
+
+void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
+{
+    SV **val;
+    char *type;
+
+    val = hv_fetch(variable, "name", 4, 0);
+    if (!val)
+        croak("The 'name' key is required in variable specs");
+
+    varspec->name = savesvpv(*val);
+
+    val = hv_fetch(variable, "sigil", 5, 0);
+    if (!val)
+        croak("The 'sigil' key is required in variable specs");
+
+    varspec->sigil = (SvPV_nolen(*val))[0];
+
+    val = hv_fetch(variable, "type", 4, 0);
+    if (!val)
+        croak("The 'type' key is required in variable specs");
+
+    varspec->type = string_to_vartype(SvPV_nolen(*val));
+}
+
+int _valid_for_type(SV *value, vartype_t type)
+{
+    svtype sv_type = SvROK(value) ? SvTYPE(SvRV(value)) : SVt_NULL;
+
+    switch (type) {
+    case VAR_SCALAR:
+        return sv_type == SVt_NULL ||
+               sv_type == SVt_IV   ||
+               sv_type == SVt_NV   ||
+               sv_type == SVt_PV   ||
+               sv_type == SVt_RV;
+    case VAR_ARRAY:
+        return sv_type == SVt_PVAV;
+    case VAR_HASH:
+        return sv_type == SVt_PVHV;
+    case VAR_CODE:
+        return sv_type == SVt_PVCV;
+    case VAR_IO:
+        return sv_type == SVt_PVGV;
+    default:
+        return 0;
+    }
+}
+
 HV *_get_namespace(SV *self)
 {
     dSP;
