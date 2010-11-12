@@ -3,10 +3,6 @@ use strict;
 use warnings;
 # ABSTRACT: routines for manipulating stashes
 
-use Carp qw(confess);
-use Scalar::Util qw(reftype);
-use Symbol;
-
 use XSLoader;
 XSLoader::load(
     __PACKAGE__,
@@ -17,10 +13,6 @@ XSLoader::load(
     exists $Package::Stash::{VERSION}
         ? ${ $Package::Stash::{VERSION} } : (),
 );
-
-# before 5.12, assigning to the ISA glob would make it lose its magical ->isa
-# powers
-use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
 
 =head1 SYNOPSIS
 
@@ -52,38 +44,6 @@ Returns the name of the package that this object represents.
 =method namespace
 
 Returns the raw stash itself.
-
-=cut
-
-=pod
-
-{
-    my %SIGIL_MAP = (
-        '$' => 'SCALAR',
-        '@' => 'ARRAY',
-        '%' => 'HASH',
-        '&' => 'CODE',
-        ''  => 'IO',
-    );
-
-    sub _deconstruct_variable_name {
-        my ($self, $variable) = @_;
-
-        (defined $variable && length $variable)
-            || confess "You must pass a variable name";
-
-        my $sigil = substr($variable, 0, 1, '');
-
-        if (exists $SIGIL_MAP{$sigil}) {
-            return ($variable, $sigil, $SIGIL_MAP{$sigil});
-        }
-        else {
-            return ("${sigil}${variable}", '', $SIGIL_MAP{''});
-        }
-    }
-}
-
-=cut
 
 =method add_package_symbol $variable $value %opts
 
@@ -122,77 +82,6 @@ Returns whether or not the given package variable (including sigil) exists.
 =method get_package_symbol $variable
 
 Returns the value of the given package variable (including sigil).
-
-=cut
-
-=pod
-
-sub get_package_symbol {
-    my ($self, $variable, %opts) = @_;
-
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
-
-    my $namespace = $self->namespace;
-
-    if (!exists $namespace->{$name}) {
-        if ($opts{vivify}) {
-            if ($type eq 'ARRAY') {
-                if (BROKEN_ISA_ASSIGNMENT) {
-                    $self->add_package_symbol(
-                        $variable,
-                        $name eq 'ISA' ? () : ([])
-                    );
-                }
-                else {
-                    $self->add_package_symbol($variable, []);
-                }
-            }
-            elsif ($type eq 'HASH') {
-                $self->add_package_symbol($variable, {});
-            }
-            elsif ($type eq 'SCALAR') {
-                $self->add_package_symbol($variable);
-            }
-            elsif ($type eq 'IO') {
-                $self->add_package_symbol($variable, Symbol::geniosym);
-            }
-            elsif ($type eq 'CODE') {
-                confess "Don't know how to vivify CODE variables";
-            }
-            else {
-                confess "Unknown type $type in vivication";
-            }
-        }
-        else {
-            if ($type eq 'CODE') {
-                # this effectively "de-vivifies" the code slot. if we don't do
-                # this, referencing the coderef at the end of this function
-                # will cause perl to auto-vivify a stub coderef in the slot,
-                # which isn't what we want
-                $self->add_package_symbol($variable);
-            }
-        }
-    }
-
-    my $entry_ref = \$namespace->{$name};
-
-    if (ref($entry_ref) eq 'GLOB') {
-        return *{$entry_ref}{$type};
-    }
-    else {
-        if ($type eq 'CODE') {
-            no strict 'refs';
-            return \&{ $self->name . '::' . $name };
-        }
-        else {
-            return undef;
-        }
-    }
-}
-
-=cut
 
 =method get_or_add_package_symbol $variable
 

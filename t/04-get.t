@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 
 use Package::Stash;
+use Scalar::Util;
 
 {
     BEGIN {
