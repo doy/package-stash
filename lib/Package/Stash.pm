@@ -204,7 +204,16 @@ sub has_package_symbol {
 
     my $entry_ref = \$namespace->{$name};
     if (reftype($entry_ref) eq 'GLOB') {
-        return defined *{$entry_ref}{$type};
+        # XXX: assigning to any typeglob slot also initializes the SCALAR slot,
+        # and saying that an undef scalar variable doesn't exist is probably
+        # vaguely less surprising than a scalar variable popping into existence
+        # without anyone defining it
+        if ($type eq 'SCALAR') {
+            return defined ${ *{$entry_ref}{$type} };
+        }
+        else {
+            return defined *{$entry_ref}{$type};
+        }
     }
     else {
         # a symbol table entry can be -1 (stub), string (stub with prototype),
