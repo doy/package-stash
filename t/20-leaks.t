@@ -62,7 +62,6 @@ use Symbol;
         $foo->add_package_symbol('$scalar_init' => 1);
         $foo->add_package_symbol('@array_init' => []);
         $foo->add_package_symbol('%hash_init' => {});
-        # hmmm, wonder why this coderef isn't treated as a leak
         $foo->add_package_symbol('&code_init' => sub { "foo" });
         $foo->add_package_symbol('io_init' => Symbol::geniosym);
     } "add_package_symbol doesn't leak";

@@ -389,18 +389,28 @@ add_package_symbol(self, variable, initial=NULL, ...)
 
         switch (variable.type) {
         case VAR_SCALAR:
+            if (GvSV(glob))
+                SvREFCNT_dec(GvSV(glob));
             GvSV(glob) = val;
             break;
         case VAR_ARRAY:
+            if (GvAV(glob))
+                SvREFCNT_dec((SV*)GvAV(glob));
             GvAV(glob) = (AV*)val;
             break;
         case VAR_HASH:
+            if (GvHV(glob))
+                SvREFCNT_dec((SV*)GvHV(glob));
             GvHV(glob) = (HV*)val;
             break;
         case VAR_CODE:
+            if (GvCV(glob))
+                SvREFCNT_dec((SV*)GvCV(glob));
             GvCV(glob) = (CV*)val;
             break;
         case VAR_IO:
+            if (GvIO(glob))
+                SvREFCNT_dec((SV*)GvIO(glob));
             GvIOp(glob) = (IO*)val;
             break;
         }
