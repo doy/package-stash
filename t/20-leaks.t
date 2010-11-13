@@ -48,24 +48,24 @@ use Symbol;
 
 {
     my $foo = Package::Stash->new('Foo');
-    leaks_cmp_ok {
+    no_leaks_ok {
         $foo->add_package_symbol('$scalar');
         $foo->add_package_symbol('@array');
         $foo->add_package_symbol('%hash');
         $foo->add_package_symbol('io');
-    } '==', 4, "add_package_symbol doesn't leak";
+    } "add_package_symbol doesn't leak";
 }
 
 {
     my $foo = Package::Stash->new('Foo');
-    leaks_cmp_ok {
+    no_leaks_ok {
         $foo->add_package_symbol('$scalar_init' => 1);
         $foo->add_package_symbol('@array_init' => []);
         $foo->add_package_symbol('%hash_init' => {});
         # hmmm, wonder why this coderef isn't treated as a leak
         $foo->add_package_symbol('&code_init' => sub { "foo" });
         $foo->add_package_symbol('io_init' => Symbol::geniosym);
-    } '==', 9, "add_package_symbol doesn't leak";
+    } "add_package_symbol doesn't leak";
     is(exception {
         is(Foo->code_init, 'foo', "sub installed correctly")
     }, undef, "code_init exists");
