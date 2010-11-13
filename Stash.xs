@@ -497,19 +497,19 @@ remove_package_symbol(self, variable)
         GV *glob = (GV*)(*entry);
         switch (variable.type) {
         case VAR_SCALAR:
-            GvSV(glob) = Nullsv;
+            GvSV(glob) = (SV *)NULL;
             break;
         case VAR_ARRAY:
-            GvAV(glob) = Nullav;
+            GvAV(glob) = (AV *)NULL;
             break;
         case VAR_HASH:
-            GvHV(glob) = Nullhv;
+            GvHV(glob) = (HV *)NULL;
             break;
         case VAR_CODE:
-            GvCV(glob) = Nullcv;
+            GvCV(glob) = (CV *)NULL;
             break;
         case VAR_IO:
-            GvIOp(glob) = Null(IO*);
+            GvIOp(glob) = (IO *)NULL;
             break;
         }
     }
