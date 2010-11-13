@@ -396,19 +396,19 @@ add_package_symbol(self, variable, initial=NULL, ...)
             GvSV(glob) = val;
             break;
         case VAR_ARRAY:
-            SvREFCNT_dec((SV*)GvAV(glob));
+            SvREFCNT_dec(GvAV(glob));
             GvAV(glob) = (AV*)val;
             break;
         case VAR_HASH:
-            SvREFCNT_dec((SV*)GvHV(glob));
+            SvREFCNT_dec(GvHV(glob));
             GvHV(glob) = (HV*)val;
             break;
         case VAR_CODE:
-            SvREFCNT_dec((SV*)GvCV(glob));
+            SvREFCNT_dec(GvCV(glob));
             GvCV(glob) = (CV*)val;
             break;
         case VAR_IO:
-            SvREFCNT_dec((SV*)GvIO(glob));
+            SvREFCNT_dec(GvIO(glob));
             GvIOp(glob) = (IO*)val;
             break;
         }
