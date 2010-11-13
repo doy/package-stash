@@ -406,6 +406,8 @@ add_package_symbol(self, variable, initial=NULL, ...)
         }
     }
 
+    SvREFCNT_dec(name);
+
 void
 remove_package_glob(self, name)
     SV *self
