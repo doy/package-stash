@@ -280,12 +280,14 @@ new(class, package_name)
 
     if (!hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0)) {
         SvREFCNT_dec(package_name);
+        SvREFCNT_dec(instance);
         croak("Couldn't initialize the 'name' key, hv_store failed");
     }
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
     nsref = newRV_inc((SV*)namespace);
     if (!hv_store(instance, "namespace", 9, nsref, 0)) {
         SvREFCNT_dec(nsref);
+        SvREFCNT_dec(instance);
         croak("Couldn't initialize the 'namespace' key, hv_store failed");
     }
 
