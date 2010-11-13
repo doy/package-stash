@@ -141,4 +141,16 @@ use Symbol;
     } "list_all_package_symbols doesn't leak";
 }
 
+# mimic CMOP::create_anon_class
+{
+    my $i = 0;
+    no_leaks_ok {
+        $i++;
+        eval "package Quux$i; 1;";
+        my $quux = Package::Stash->new("Quux$i");
+        $quux->get_or_add_package_symbol('@ISA');
+        delete $::{'Quux' . $i . '::'};
+    } "get_package_symbol doesn't leak during glob expansion";
+}
+
 done_testing;

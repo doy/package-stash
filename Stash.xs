@@ -216,6 +216,7 @@ SV *_get_package_symbol(SV *self, varspec_t *variable, int vivify)
         /* can't use gv_init here, because it screws up @ISA in a way that I
          * can't reproduce, but that CMOP triggers */
         gv_fetchsv(namesv, GV_ADD, vartype_to_svtype(variable->type));
+        SvREFCNT_dec(namesv);
     }
 
     if (vivify) {
