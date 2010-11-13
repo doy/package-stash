@@ -277,7 +277,7 @@ new(class, package_name)
 
     instance = newHV();
 
-    hv_store(instance, "name", 4, SvREFCNT_inc(package_name), 0);
+    hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0);
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
     hv_store(instance, "namespace", 9, newRV_inc((SV*)namespace), 0);
 
@@ -294,7 +294,7 @@ name(self)
     if (!sv_isobject(self))
         croak("Can't call name as a class method");
     slot = hv_fetch((HV*)SvRV(self), "name", 4, 0);
-    RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
+    RETVAL = slot ? SvREFCNT_inc_simple_NN(*slot) : &PL_sv_undef;
   OUTPUT:
     RETVAL
 
@@ -307,7 +307,7 @@ namespace(self)
     if (!sv_isobject(self))
         croak("Can't call namespace as a class method");
     slot = hv_fetch((HV*)SvRV(self), "namespace", 9, 0);
-    RETVAL = slot ? SvREFCNT_inc(*slot) : &PL_sv_undef;
+    RETVAL = slot ? SvREFCNT_inc_simple_NN(*slot) : &PL_sv_undef;
   OUTPUT:
     RETVAL
 
@@ -382,7 +382,7 @@ add_package_symbol(self, variable, initial=NULL, ...)
 
         if (SvROK(initial)) {
             val = SvRV(initial);
-            SvREFCNT_inc(val);
+            SvREFCNT_inc_simple_void_NN(val);
         }
         else {
             val = newSVsv(initial);
@@ -390,28 +390,23 @@ add_package_symbol(self, variable, initial=NULL, ...)
 
         switch (variable.type) {
         case VAR_SCALAR:
-            if (GvSV(glob))
-                SvREFCNT_dec(GvSV(glob));
+            SvREFCNT_dec(GvSV(glob));
             GvSV(glob) = val;
             break;
         case VAR_ARRAY:
-            if (GvAV(glob))
-                SvREFCNT_dec((SV*)GvAV(glob));
+            SvREFCNT_dec((SV*)GvAV(glob));
             GvAV(glob) = (AV*)val;
             break;
         case VAR_HASH:
-            if (GvHV(glob))
-                SvREFCNT_dec((SV*)GvHV(glob));
+            SvREFCNT_dec((SV*)GvHV(glob));
             GvHV(glob) = (HV*)val;
             break;
         case VAR_CODE:
-            if (GvCV(glob))
-                SvREFCNT_dec((SV*)GvCV(glob));
+            SvREFCNT_dec((SV*)GvCV(glob));
             GvCV(glob) = (CV*)val;
             break;
         case VAR_IO:
-            if (GvIO(glob))
-                SvREFCNT_dec((SV*)GvIO(glob));
+            SvREFCNT_dec((SV*)GvIO(glob));
             GvIOp(glob) = (IO*)val;
             break;
         }
