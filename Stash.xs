@@ -278,9 +278,9 @@ new(class, package_name)
 
     hv_store(instance, "name", 4, package_name, 0);
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
-    hv_store(instance, "namespace", 9, newRV((SV*)namespace), 0);
+    hv_store(instance, "namespace", 9, newRV_noinc((SV*)namespace), 0);
 
-    RETVAL = sv_bless(newRV((SV*)instance), gv_stashpv(class, 0));
+    RETVAL = sv_bless(newRV_inc((SV*)instance), gv_stashpv(class, 0));
   OUTPUT:
     RETVAL
 
@@ -462,7 +462,7 @@ get_package_symbol(self, variable)
     val = _get_package_symbol(self, &variable, 0);
     if (!val)
         XSRETURN_UNDEF;
-    RETVAL = newRV(val);
+    RETVAL = newRV_inc(val);
   OUTPUT:
     RETVAL
 
@@ -476,7 +476,7 @@ get_or_add_package_symbol(self, variable)
     val = _get_package_symbol(self, &variable, 1);
     if (!val)
         XSRETURN_UNDEF;
-    RETVAL = newRV(val);
+    RETVAL = newRV_inc(val);
   OUTPUT:
     RETVAL
 
