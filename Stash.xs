@@ -277,9 +277,11 @@ new(class, package_name)
 
     instance = newHV();
 
-    hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0);
+    if (!hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0))
+        croak("Couldn't initialize the 'name' key, hv_store failed");
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
-    hv_store(instance, "namespace", 9, newRV_inc((SV*)namespace), 0);
+    if (!hv_store(instance, "namespace", 9, newRV_inc((SV*)namespace), 0))
+        croak("Couldn't initialize the 'namespace' key, hv_store failed");
 
     RETVAL = sv_bless(newRV_noinc((SV*)instance), gv_stashpv(class, 0));
   OUTPUT:
