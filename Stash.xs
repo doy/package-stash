@@ -532,20 +532,19 @@ list_all_package_symbols(self, vartype=VAR_NONE)
         namespace = _get_namespace(self);
         keys = hv_iterinit(namespace);
         EXTEND(SP, keys);
-        while (entry = hv_iternext(namespace)) {
+        while ((entry = hv_iternext(namespace))) {
             mPUSHs(newSVhek(HeKEY_hek(entry)));
         }
     }
     else {
         HV *namespace;
-        HE *entry;
         SV *val;
         char *key;
         int len;
 
         namespace = _get_namespace(self);
         hv_iterinit(namespace);
-        while (val = hv_iternextsv(namespace, &key, &len)) {
+        while ((val = hv_iternextsv(namespace, &key, &len))) {
             GV *gv = (GV*)val;
             if (isGV(gv)) {
                 switch (vartype) {
