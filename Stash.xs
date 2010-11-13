@@ -402,18 +402,25 @@ add_package_symbol(self, variable, initial=NULL, ...)
         case VAR_SCALAR:
             SvREFCNT_dec(GvSV(glob));
             GvSV(glob) = val;
+            GvIMPORTED_SV_on(glob);
             break;
         case VAR_ARRAY:
             SvREFCNT_dec(GvAV(glob));
             GvAV(glob) = (AV*)val;
+            GvIMPORTED_AV_on(glob);
             break;
         case VAR_HASH:
             SvREFCNT_dec(GvHV(glob));
             GvHV(glob) = (HV*)val;
+            GvIMPORTED_HV_on(glob);
             break;
         case VAR_CODE:
             SvREFCNT_dec(GvCV(glob));
             GvCV(glob) = (CV*)val;
+            GvIMPORTED_CV_on(glob);
+            GvASSUMECV_on(glob);
+            GvCVGEN(glob) = 0;
+            mro_method_changed_in(GvSTASH(glob));
             break;
         case VAR_IO:
             SvREFCNT_dec(GvIO(glob));
@@ -525,6 +532,8 @@ remove_package_symbol(self, variable)
             break;
         case VAR_CODE:
             GvCV(glob) = (CV *)NULL;
+            GvCVGEN(glob) = 0;
+            mro_method_changed_in(GvSTASH(glob));
             break;
         case VAR_IO:
             GvIOp(glob) = (IO *)NULL;
