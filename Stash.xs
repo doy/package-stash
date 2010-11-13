@@ -274,13 +274,13 @@ new(class, package_name)
     if (!SvPOK(package_name))
         croak("The constructor argument must be the name of a package");
 
-    instance = (HV*)sv_2mortal((SV*)newHV());
+    instance = newHV();
 
     hv_store(instance, "name", 4, SvREFCNT_inc(package_name), 0);
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
     hv_store(instance, "namespace", 9, newRV_inc((SV*)namespace), 0);
 
-    RETVAL = sv_bless(newRV_inc((SV*)instance), gv_stashpv(class, 0));
+    RETVAL = sv_bless(newRV_noinc((SV*)instance), gv_stashpv(class, 0));
   OUTPUT:
     RETVAL
 
