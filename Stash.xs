@@ -271,17 +271,23 @@ new(class, package_name)
   PREINIT:
     HV *instance;
     HV *namespace;
+    SV *nsref;
   CODE:
     if (!SvPOK(package_name))
         croak("The constructor argument must be the name of a package");
 
     instance = newHV();
 
-    if (!hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0))
+    if (!hv_store(instance, "name", 4, SvREFCNT_inc_simple_NN(package_name), 0)) {
+        SvREFCNT_dec(package_name);
         croak("Couldn't initialize the 'name' key, hv_store failed");
+    }
     namespace = gv_stashpv(SvPV_nolen(package_name), GV_ADD);
-    if (!hv_store(instance, "namespace", 9, newRV_inc((SV*)namespace), 0))
+    nsref = newRV_inc((SV*)namespace);
+    if (!hv_store(instance, "namespace", 9, nsref, 0)) {
+        SvREFCNT_dec(nsref);
         croak("Couldn't initialize the 'namespace' key, hv_store failed");
+    }
 
     RETVAL = sv_bless(newRV_noinc((SV*)instance), gv_stashpv(class, 0));
   OUTPUT:
