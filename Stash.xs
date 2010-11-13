@@ -168,7 +168,7 @@ HV *_get_namespace(SV *self)
     XPUSHs(self);
     PUTBACK;
 
-    call_method("namespace", G_SCALAR | G_NOARGS);
+    call_method("namespace", G_SCALAR);
 
     SPAGAIN;
     ret = POPs;
@@ -186,7 +186,7 @@ SV *_get_name(SV *self)
     XPUSHs(self);
     PUTBACK;
 
-    call_method("name", G_SCALAR | G_NOARGS);
+    call_method("name", G_SCALAR);
 
     SPAGAIN;
     ret = POPs;
