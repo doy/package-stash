@@ -119,14 +119,16 @@ use Symbol;
     no_leaks_ok {
         $foo->get_or_add_package_symbol('io');
         $foo->get_or_add_package_symbol('%hash');
-        # and why are these not leaks either?
-        $foo->get_or_add_package_symbol('@array_init');
+        my @super = ('Exporter');
+        @{$foo->get_or_add_package_symbol('@ISA')} = @super;
         $foo->get_or_add_package_symbol('$glob');
     } "get_or_add_package_symbol doesn't leak";
     ok($foo->has_package_symbol('$glob'));
     is(ref($foo->get_package_symbol('$glob')), 'SCALAR');
-    ok($foo->has_package_symbol('@array_init'));
-    is(ref($foo->get_package_symbol('@array_init')), 'ARRAY');
+    ok($foo->has_package_symbol('@ISA'));
+    is(ref($foo->get_package_symbol('@ISA')), 'ARRAY');
+    is_deeply($foo->get_package_symbol('@ISA'), ['Exporter']);
+    isa_ok('Foo', 'Exporter');
 }
 
 {
