@@ -113,7 +113,6 @@ void _deconstruct_variable_name(char *variable, varspec_t *varspec)
 void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
 {
     SV **val;
-    char *type;
 
     val = hv_fetch(variable, "name", 4, 0);
     if (!val)
