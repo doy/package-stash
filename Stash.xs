@@ -285,6 +285,20 @@ SV *_get_name(SV *self)
     return ret;
 }
 
+void _expand_glob(SV *self, char *name)
+{
+    SV *namesv;
+
+    namesv = newSVsv(_get_name(self));
+    sv_catpvs(namesv, "::");
+    sv_catpv(namesv, name);
+
+    /* can't use gv_init here, because it screws up @ISA in a way that I
+     * can't reproduce, but that CMOP triggers */
+    gv_fetchsv(namesv, GV_ADD, SVt_NULL);
+    SvREFCNT_dec(namesv);
+}
+
 SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
 {
     HV *namespace;
@@ -297,18 +311,8 @@ SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
         return NULL;
 
     glob = (GV*)(*entry);
-    if (!isGV(glob)) {
-        SV *namesv;
-
-        namesv = newSVsv(_get_name(self));
-        sv_catpvs(namesv, "::");
-        sv_catpv(namesv, variable->name);
-
-        /* can't use gv_init here, because it screws up @ISA in a way that I
-         * can't reproduce, but that CMOP triggers */
-        gv_fetchsv(namesv, GV_ADD, vartype_to_svtype(variable->type));
-        SvREFCNT_dec(namesv);
-    }
+    if (!isGV(glob))
+        _expand_glob(self, variable->name);
 
     if (vivify) {
         switch (variable->type) {
