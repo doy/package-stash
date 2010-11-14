@@ -99,8 +99,7 @@ typedef enum {
 
 typedef struct {
     vartype_t type;
-    char *name;
-    I32 namelen;
+    SV *name;
 } varspec_t;
 
 static U32 name_hash, namespace_hash, type_hash;
@@ -164,40 +163,35 @@ vartype_t string_to_vartype(char *vartype)
     }
 }
 
-void _deconstruct_variable_name(SV *varsv, varspec_t *varspec)
+void _deconstruct_variable_name(SV *variable, varspec_t *varspec)
 {
-    char *variable;
-    STRLEN len;
+    char *varpv;
 
-    variable = SvPV(varsv, len);
-    if (!variable[0])
+    if (!SvCUR(variable))
         croak("You must pass a variable name");
 
-    switch (variable[0]) {
+    varspec->name = sv_2mortal(newSVsv(variable));
+
+    varpv = SvPV_nolen(varspec->name);
+    switch (varpv[0]) {
     case '$':
         varspec->type = VAR_SCALAR;
-        varspec->name = &variable[1];
-        varspec->namelen = len - 1;
+        sv_chop(varspec->name, &varpv[1]);
         break;
     case '@':
         varspec->type = VAR_ARRAY;
-        varspec->name = &variable[1];
-        varspec->namelen = len - 1;
+        sv_chop(varspec->name, &varpv[1]);
         break;
     case '%':
         varspec->type = VAR_HASH;
-        varspec->name = &variable[1];
-        varspec->namelen = len - 1;
+        sv_chop(varspec->name, &varpv[1]);
         break;
     case '&':
         varspec->type = VAR_CODE;
-        varspec->name = &variable[1];
-        varspec->namelen = len - 1;
+        sv_chop(varspec->name, &varpv[1]);
         break;
     default:
         varspec->type = VAR_IO;
-        varspec->name = variable;
-        varspec->namelen = len;
         break;
     }
 }
@@ -205,24 +199,19 @@ void _deconstruct_variable_name(SV *varsv, varspec_t *varspec)
 void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
 {
     HE *val;
-    char *valpv;
     STRLEN len;
 
     val = hv_fetch_ent(variable, name_key, 0, name_hash);
     if (!val)
         croak("The 'name' key is required in variable specs");
 
-    valpv = HePV(val, len);
-    varspec->name = savepvn(valpv, len);
-    SAVEFREEPV(varspec->name);
-    varspec->namelen = len;
+    varspec->name = sv_2mortal(newSVhe(val));
 
     val = hv_fetch_ent(variable, type_key, 0, type_hash);
     if (!val)
         croak("The 'type' key is required in variable specs");
 
-    valpv = HePV(val, len);
-    varspec->type = string_to_vartype(valpv);
+    varspec->type = string_to_vartype(HePV(val, len));
 }
 
 int _valid_for_type(SV *value, vartype_t type)
@@ -285,32 +274,32 @@ SV *_get_name(SV *self)
     return ret;
 }
 
-void _expand_glob(SV *self, char *name)
+void _expand_glob(SV *self, SV *varname)
 {
-    SV *namesv;
+    SV *name;
 
-    namesv = newSVsv(_get_name(self));
-    sv_catpvs(namesv, "::");
-    sv_catpv(namesv, name);
+    name = newSVsv(_get_name(self));
+    sv_catpvs(name, "::");
+    sv_catsv(name, varname);
 
     /* can't use gv_init here, because it screws up @ISA in a way that I
      * can't reproduce, but that CMOP triggers */
-    gv_fetchsv(namesv, GV_ADD, SVt_NULL);
-    SvREFCNT_dec(namesv);
+    gv_fetchsv(name, GV_ADD, SVt_NULL);
+    SvREFCNT_dec(name);
 }
 
 SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
 {
     HV *namespace;
-    SV **entry;
+    HE *entry;
     GV *glob;
 
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable->name, variable->namelen, vivify);
+    entry = hv_fetch_ent(namespace, variable->name, vivify, 0);
     if (!entry)
         return NULL;
 
-    glob = (GV*)(*entry);
+    glob = (GV*)(HeVAL(entry));
     if (!isGV(glob))
         _expand_glob(self, variable->name);
 
@@ -361,7 +350,7 @@ PROTOTYPES: DISABLE
 
 SV*
 new(class, package_name)
-    char *class
+    SV *class
     SV *package_name
   PREINIT:
     HV *instance;
@@ -386,7 +375,7 @@ new(class, package_name)
         croak("Couldn't initialize the 'namespace' key, hv_store failed");
     }
 
-    RETVAL = sv_bless(newRV_noinc((SV*)instance), gv_stashpv(class, 0));
+    RETVAL = sv_bless(newRV_noinc((SV*)instance), gv_stashsv(class, 0));
   OUTPUT:
     RETVAL
 
@@ -431,11 +420,11 @@ add_symbol(self, variable, initial=NULL, ...)
 
     name = newSVsv(_get_name(self));
     sv_catpvs(name, "::");
-    sv_catpv(name, variable.name);
+    sv_catsv(name, variable.name);
 
     if (items > 2 && (PL_perldb & 0x10) && variable.type == VAR_CODE) {
         int i;
-        char *filename = NULL, *namepv;
+        char *filename = NULL;
         I32 first_line_num = -1, last_line_num = -1;
         STRLEN namelen;
         SV *dbval;
@@ -485,9 +474,9 @@ add_symbol(self, variable, initial=NULL, ...)
         /* http://perldoc.perl.org/perldebguts.html#Debugger-Internals */
         dbsub = get_hv("DB::sub", 1);
         dbval = newSVpvf("%s:%d-%d", filename, first_line_num, last_line_num);
-        namepv = SvPV(name, namelen);
-        if (!hv_store(dbsub, namepv, namelen, dbval, 0)) {
-            warn("Failed to update $DB::sub for subroutine %s", namepv);
+        if (!hv_store_ent(dbsub, name, dbval, 0)) {
+            warn("Failed to update $DB::sub for subroutine %s",
+                 SvPV_nolen(name));
             SvREFCNT_dec(dbval);
         }
     }
@@ -530,15 +519,11 @@ add_symbol(self, variable, initial=NULL, ...)
     SvREFCNT_dec(name);
 
 void
-remove_glob(self, namesv)
+remove_glob(self, name)
     SV *self
-    SV *namesv
-  PREINIT:
-    char *name;
-    STRLEN len;
+    SV *name
   CODE:
-    name = SvPV(namesv, len);
-    hv_delete(_get_namespace(self), name, len, G_DISCARD);
+    hv_delete_ent(_get_namespace(self), name, G_DISCARD, 0);
 
 int
 has_symbol(self, variable)
@@ -546,15 +531,17 @@ has_symbol(self, variable)
     varspec_t variable
   PREINIT:
     HV *namespace;
-    SV **entry;
+    HE *entry;
+    SV *val;
   CODE:
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable.name, variable.namelen, 0);
+    entry = hv_fetch_ent(namespace, variable.name, 0, 0);
     if (!entry)
         XSRETURN_UNDEF;
 
-    if (isGV(*entry)) {
-        GV *glob = (GV*)(*entry);
+    val = HeVAL(entry);
+    if (isGV(val)) {
+        GV *glob = (GV*)val;
         switch (variable.type) {
         case VAR_SCALAR:
             RETVAL = GvSVOK(glob) ? 1 : 0;
@@ -613,15 +600,17 @@ remove_symbol(self, variable)
     varspec_t variable
   PREINIT:
     HV *namespace;
-    SV **entry;
+    HE *entry;
+    SV *val;
   CODE:
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable.name, variable.namelen, 0);
+    entry = hv_fetch_ent(namespace, variable.name, 0, 0);
     if (!entry)
         XSRETURN_EMPTY;
 
-    if (isGV(*entry)) {
-        GV *glob = (GV*)(*entry);
+    val = HeVAL(entry);
+    if (isGV(val)) {
+        GV *glob = (GV*)val;
         switch (variable.type) {
         case VAR_SCALAR:
             GvSetSV(glob, NULL);
@@ -642,7 +631,7 @@ remove_symbol(self, variable)
     }
     else {
         if (variable.type == VAR_CODE) {
-            hv_delete(namespace, variable.name, variable.namelen, G_DISCARD);
+            hv_delete_ent(namespace, variable.name, G_DISCARD, 0);
         }
     }
 
@@ -720,8 +709,11 @@ get_all_symbols(self, vartype=VAR_NONE)
     while ((val = hv_iternextsv(namespace, &key, &len))) {
         GV *gv = (GV*)val;
 
-        if (!isGV(gv))
-            _expand_glob(self, key);
+        if (!isGV(gv)) {
+            SV *keysv = newSVpvn(key, len);
+            _expand_glob(self, keysv);
+            SvREFCNT_dec(keysv);
+        }
 
         switch (vartype) {
         case VAR_SCALAR:
