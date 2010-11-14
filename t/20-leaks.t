@@ -145,6 +145,8 @@ use Symbol;
 
 # mimic CMOP::create_anon_class
 {
+    local $TODO = $] < 5.010 ? "deleting stashes is inherently leaky on 5.8"
+                             : undef;
     my $i = 0;
     no_leaks_ok {
         $i++;
