@@ -39,11 +39,21 @@
 #define GvCVOK(g) GvCVu(g) /* XXX: should this really be GvCVu? or GvCV? */
 #define GvIOOK(g) GvIO(g)
 
+#if PERL_VERSION < 10
+#define GvSetSV(g,v) do {               \
+    SV *_v = (SV*)(v);                  \
+    SvREFCNT_dec(GvSV(g));              \
+    if ((GvSV(g) = _v ? _v : newSV(0))) \
+        GvIMPORTED_SV_on(g);            \
+} while (0)
+#else
 #define GvSetSV(g,v) do {               \
     SvREFCNT_dec(GvSV(g));              \
     if ((GvSV(g) = (SV*)(v)))           \
         GvIMPORTED_SV_on(g);            \
 } while (0)
+#endif
+
 #define GvSetAV(g,v) do {               \
     SvREFCNT_dec(GvAV(g));              \
     if ((GvAV(g) = (AV*)(v)))           \
