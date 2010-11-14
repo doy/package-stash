@@ -155,9 +155,15 @@ C<$type_filter> is passed, the hash will contain every variable of that type in
 the package as values, otherwise, it will contain the typeglobs corresponding
 to the variable names (basically, a clone of the stash).
 
-=head1 BUGS
+=head1 BUGS / CAVEATS
 
-No known bugs.
+=over 4
+
+=item * On perl versions prior to 5.10, undefined package scalars will not show up as existing, due to shortcomings within perl.
+
+=item * GLOB and FORMAT variables are not (yet) accessible through this module.
+
+=back
 
 Please report any bugs through RT: email
 C<bug-package-stash at rt.cpan.org>, or browse to
