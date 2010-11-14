@@ -344,11 +344,13 @@ like(exception {
         [qw(BEGIN bar baz foo quuuux quuux quux)],
         "list_all_symbols",
     );
+    { local $TODO = $] < 5.010 ? "undef scalars aren't visible on 5.8" : undef;
     is_deeply(
         [sort $quuux->list_all_symbols('SCALAR')],
         [qw(foo)],
         "list_all_symbols SCALAR",
     );
+    }
     is_deeply(
         [sort $quuux->list_all_symbols('ARRAY')],
         [qw(bar foo)],

@@ -24,6 +24,50 @@
 #define savesvpv(s) savepv(SvPV_nolen(s))
 #endif
 
+/* HACK: scalar slots are always populated on perl < 5.10, so treat undef
+ * as nonexistent. this is consistent with the previous behavior of the pure
+ * perl version of this module (since this is the behavior that perl sees
+ * in all versions */
+#if PERL_VERSION < 10
+#define GvSVOK(g) (GvSV(g) && SvTYPE(GvSV(g)) != SVt_NULL)
+#else
+#define GvSVOK(g) GvSV(g)
+#endif
+
+#define GvAVOK(g) GvAV(g)
+#define GvHVOK(g) GvHV(g)
+#define GvCVOK(g) GvCVu(g) /* XXX: should this really be GvCVu? or GvCV? */
+#define GvIOOK(g) GvIO(g)
+
+#define GvSetSV(g,v) do {               \
+    SvREFCNT_dec(GvSV(g));              \
+    if ((GvSV(g) = (SV*)(v)))           \
+        GvIMPORTED_SV_on(g);            \
+} while (0)
+#define GvSetAV(g,v) do {               \
+    SvREFCNT_dec(GvAV(g));              \
+    if ((GvAV(g) = (AV*)(v)))           \
+        GvIMPORTED_AV_on(g);            \
+} while (0)
+#define GvSetHV(g,v) do {               \
+    SvREFCNT_dec(GvHV(g));              \
+    if ((GvHV(g) = (HV*)(v)))           \
+        GvIMPORTED_HV_on(g);            \
+} while (0)
+#define GvSetCV(g,v) do {               \
+    SvREFCNT_dec(GvCV(g));              \
+    if ((GvCV(g) = (CV*)(v))) {         \
+        GvIMPORTED_CV_on(g);            \
+        GvASSUMECV_on(g);               \
+    }                                   \
+    GvCVGEN(g) = 0;                     \
+    mro_method_changed_in(GvSTASH(g));  \
+} while (0)
+#define GvSetIO(g,v) do {               \
+    SvREFCNT_dec(GvIO(g));              \
+    GvIOp(g) = (IO*)(v);                \
+} while (0)
+
 typedef enum {
     VAR_NONE = 0,
     VAR_SCALAR,
@@ -244,22 +288,22 @@ SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
     if (vivify) {
         switch (variable->type) {
         case VAR_SCALAR:
-            if (!GvSV(glob))
-                GvSV(glob) = newSV(0);
+            if (!GvSVOK(glob))
+                GvSetSV(glob, newSV(0));
             break;
         case VAR_ARRAY:
-            if (!GvAV(glob))
-                GvAV(glob) = newAV();
+            if (!GvAVOK(glob))
+                GvSetAV(glob, newAV());
             break;
         case VAR_HASH:
-            if (!GvHV(glob))
-                GvHV(glob) = newHV();
+            if (!GvHVOK(glob))
+                GvSetHV(glob, newHV());
             break;
         case VAR_CODE:
             croak("Don't know how to vivify CODE variables");
         case VAR_IO:
-            if (!GvIO(glob))
-                GvIOp(glob) = newIO();
+            if (!GvIOOK(glob))
+                GvSetIO(glob, newIO());
             break;
         default:
             croak("Unknown type in vivication");
@@ -422,31 +466,19 @@ add_symbol(self, variable, initial=NULL, ...)
 
         switch (variable.type) {
         case VAR_SCALAR:
-            SvREFCNT_dec(GvSV(glob));
-            GvSV(glob) = val;
-            GvIMPORTED_SV_on(glob);
+            GvSetSV(glob, val);
             break;
         case VAR_ARRAY:
-            SvREFCNT_dec(GvAV(glob));
-            GvAV(glob) = (AV*)val;
-            GvIMPORTED_AV_on(glob);
+            GvSetAV(glob, val);
             break;
         case VAR_HASH:
-            SvREFCNT_dec(GvHV(glob));
-            GvHV(glob) = (HV*)val;
-            GvIMPORTED_HV_on(glob);
+            GvSetHV(glob, val);
             break;
         case VAR_CODE:
-            SvREFCNT_dec(GvCV(glob));
-            GvCV(glob) = (CV*)val;
-            GvIMPORTED_CV_on(glob);
-            GvASSUMECV_on(glob);
-            GvCVGEN(glob) = 0;
-            mro_method_changed_in(GvSTASH(glob));
+            GvSetCV(glob, val);
             break;
         case VAR_IO:
-            SvREFCNT_dec(GvIO(glob));
-            GvIOp(glob) = (IO*)val;
+            GvSetIO(glob, val);
             break;
         }
     }
@@ -477,19 +509,19 @@ has_symbol(self, variable)
         GV *glob = (GV*)(*entry);
         switch (variable.type) {
         case VAR_SCALAR:
-            RETVAL = GvSV(glob) ? 1 : 0;
+            RETVAL = GvSVOK(glob) ? 1 : 0;
             break;
         case VAR_ARRAY:
-            RETVAL = GvAV(glob) ? 1 : 0;
+            RETVAL = GvAVOK(glob) ? 1 : 0;
             break;
         case VAR_HASH:
-            RETVAL = GvHV(glob) ? 1 : 0;
+            RETVAL = GvHVOK(glob) ? 1 : 0;
             break;
         case VAR_CODE:
-            RETVAL = GvCV(glob) ? 1 : 0;
+            RETVAL = GvCVOK(glob) ? 1 : 0;
             break;
         case VAR_IO:
-            RETVAL = GvIO(glob) ? 1 : 0;
+            RETVAL = GvIOOK(glob) ? 1 : 0;
             break;
         }
     }
@@ -544,21 +576,19 @@ remove_symbol(self, variable)
         GV *glob = (GV*)(*entry);
         switch (variable.type) {
         case VAR_SCALAR:
-            GvSV(glob) = (SV *)NULL;
+            GvSetSV(glob, NULL);
             break;
         case VAR_ARRAY:
-            GvAV(glob) = (AV *)NULL;
+            GvSetAV(glob, NULL);
             break;
         case VAR_HASH:
-            GvHV(glob) = (HV *)NULL;
+            GvSetHV(glob, NULL);
             break;
         case VAR_CODE:
-            GvCV(glob) = (CV *)NULL;
-            GvCVGEN(glob) = 0;
-            mro_method_changed_in(GvSTASH(glob));
+            GvSetCV(glob, NULL);
             break;
         case VAR_IO:
-            GvIOp(glob) = (IO *)NULL;
+            GvSetIO(glob, NULL);
             break;
         }
     }
@@ -598,23 +628,23 @@ list_all_symbols(self, vartype=VAR_NONE)
             if (isGV(gv)) {
                 switch (vartype) {
                 case VAR_SCALAR:
-                    if (GvSV(val))
+                    if (GvSVOK(val))
                         mXPUSHp(key, len);
                     break;
                 case VAR_ARRAY:
-                    if (GvAV(val))
+                    if (GvAVOK(val))
                         mXPUSHp(key, len);
                     break;
                 case VAR_HASH:
-                    if (GvHV(val))
+                    if (GvHVOK(val))
                         mXPUSHp(key, len);
                     break;
                 case VAR_CODE:
-                    if (GvCVu(val))
+                    if (GvCVOK(val))
                         mXPUSHp(key, len);
                     break;
                 case VAR_IO:
-                    if (GvIO(val))
+                    if (GvIOOK(val))
                         mXPUSHp(key, len);
                     break;
                 }
