@@ -5,7 +5,7 @@ vartype_t	T_VARTYPE
 INPUT
 T_VARSPEC
     if (SvPOK($arg))
-        _deconstruct_variable_name(SvPV_nolen($arg), &$var);
+        _deconstruct_variable_name($arg, &$var);
     else if (SvROK($arg) && SvTYPE(SvRV($arg)) == SVt_PVHV)
         _deconstruct_variable_hash((HV*)SvRV($arg), &$var);
     else

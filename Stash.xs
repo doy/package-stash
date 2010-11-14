@@ -100,6 +100,7 @@ typedef enum {
 typedef struct {
     vartype_t type;
     char *name;
+    I32 namelen;
 } varspec_t;
 
 static U32 name_hash, namespace_hash, type_hash;
@@ -163,34 +164,41 @@ vartype_t string_to_vartype(char *vartype)
     }
 }
 
-void _deconstruct_variable_name(char *variable, varspec_t *varspec)
+void _deconstruct_variable_name(SV *varsv, varspec_t *varspec)
 {
-    if (!variable || !variable[0])
-        croak("You must pass a variable name");
+    char *variable;
+    STRLEN len;
 
-    varspec->type = VAR_NONE;
+    variable = SvPV(varsv, len);
+    if (!variable[0])
+        croak("You must pass a variable name");
 
     switch (variable[0]) {
     case '$':
         varspec->type = VAR_SCALAR;
+        varspec->name = &variable[1];
+        varspec->namelen = len - 1;
         break;
     case '@':
         varspec->type = VAR_ARRAY;
+        varspec->name = &variable[1];
+        varspec->namelen = len - 1;
         break;
     case '%':
         varspec->type = VAR_HASH;
+        varspec->name = &variable[1];
+        varspec->namelen = len - 1;
         break;
     case '&':
         varspec->type = VAR_CODE;
-        break;
-    }
-
-    if (varspec->type != VAR_NONE) {
         varspec->name = &variable[1];
-    }
-    else {
+        varspec->namelen = len - 1;
+        break;
+    default:
         varspec->type = VAR_IO;
         varspec->name = variable;
+        varspec->namelen = len;
+        break;
     }
 }
 
@@ -207,6 +215,7 @@ void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
     valpv = HePV(val, len);
     varspec->name = savepvn(valpv, len);
     SAVEFREEPV(varspec->name);
+    varspec->namelen = len;
 
     val = hv_fetch_ent(variable, type_key, 0, type_hash);
     if (!val)
@@ -283,7 +292,7 @@ SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
     GV *glob;
 
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable->name, strlen(variable->name), vivify);
+    entry = hv_fetch(namespace, variable->name, variable->namelen, vivify);
     if (!entry)
         return NULL;
 
@@ -517,11 +526,15 @@ add_symbol(self, variable, initial=NULL, ...)
     SvREFCNT_dec(name);
 
 void
-remove_glob(self, name)
+remove_glob(self, namesv)
     SV *self
-    char *name
+    SV *namesv
+  PREINIT:
+    char *name;
+    STRLEN len;
   CODE:
-    hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
+    name = SvPV(namesv, len);
+    hv_delete(_get_namespace(self), name, len, G_DISCARD);
 
 int
 has_symbol(self, variable)
@@ -532,7 +545,7 @@ has_symbol(self, variable)
     SV **entry;
   CODE:
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable.name, strlen(variable.name), 0);
+    entry = hv_fetch(namespace, variable.name, variable.namelen, 0);
     if (!entry)
         XSRETURN_UNDEF;
 
@@ -599,7 +612,7 @@ remove_symbol(self, variable)
     SV **entry;
   CODE:
     namespace = _get_namespace(self);
-    entry = hv_fetch(namespace, variable.name, strlen(variable.name), 0);
+    entry = hv_fetch(namespace, variable.name, variable.namelen, 0);
     if (!entry)
         XSRETURN_EMPTY;
 
@@ -625,7 +638,7 @@ remove_symbol(self, variable)
     }
     else {
         if (variable.type == VAR_CODE) {
-            hv_delete(namespace, variable.name, strlen(variable.name), G_DISCARD);
+            hv_delete(namespace, variable.name, variable.namelen, G_DISCARD);
         }
     }
 
@@ -650,7 +663,7 @@ list_all_symbols(self, vartype=VAR_NONE)
         HV *namespace;
         SV *val;
         char *key;
-        int len;
+        I32 len;
 
         namespace = _get_namespace(self);
         hv_iterinit(namespace);
