@@ -703,6 +703,55 @@ list_all_symbols(self, vartype=VAR_NONE)
         }
     }
 
+void
+get_all_symbols(self, vartype=VAR_NONE)
+    SV *self
+    vartype_t vartype
+  PREINIT:
+    HV *namespace, *ret;
+    SV *val;
+    char *key;
+    I32 len;
+  PPCODE:
+    namespace = _get_namespace(self);
+    ret = newHV();
+
+    hv_iterinit(namespace);
+    while ((val = hv_iternextsv(namespace, &key, &len))) {
+        GV *gv = (GV*)val;
+
+        if (!isGV(gv))
+            _expand_glob(self, key);
+
+        switch (vartype) {
+        case VAR_SCALAR:
+            if (GvSVOK(val))
+                hv_store(ret, key, len, newRV_inc(GvSV(gv)), 0);
+            break;
+        case VAR_ARRAY:
+            if (GvAVOK(val))
+                hv_store(ret, key, len, newRV_inc((SV*)GvAV(gv)), 0);
+            break;
+        case VAR_HASH:
+            if (GvHVOK(val))
+                hv_store(ret, key, len, newRV_inc((SV*)GvHV(gv)), 0);
+            break;
+        case VAR_CODE:
+            if (GvCVOK(val))
+                hv_store(ret, key, len, newRV_inc((SV*)GvCV(gv)), 0);
+            break;
+        case VAR_IO:
+            if (GvIOOK(val))
+                hv_store(ret, key, len, newRV_inc((SV*)GvIO(gv)), 0);
+            break;
+        case VAR_NONE:
+            hv_store(ret, key, len, SvREFCNT_inc_simple_NN(val), 0);
+            break;
+        }
+    }
+
+    mPUSHs(newRV_noinc((SV*)ret));
+
 BOOT:
     {
         name_key = newSVpvs("name");

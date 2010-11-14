@@ -226,6 +226,52 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
     ok(defined(*{"Foo::foo"}{ARRAY}), '... the @foo slot has NOT been removed');
 }
 
+{
+    my $syms = $foo_stash->get_all_symbols;
+    is_deeply(
+        [ sort keys %{ $syms } ],
+        [ sort $foo_stash->list_all_symbols ],
+        '... the fetched symbols are the same as the listed ones'
+    );
+}
+
+{
+    my $syms = $foo_stash->get_all_symbols('CODE');
+
+    is_deeply(
+        [ sort keys %{ $syms } ],
+        [ sort $foo_stash->list_all_symbols('CODE') ],
+        '... the fetched symbols are the same as the listed ones'
+    );
+
+    foreach my $symbol (keys %{ $syms }) {
+        is($syms->{$symbol}, $foo_stash->get_symbol('&' . $symbol), '... got the right symbol');
+    }
+}
+
+{
+    $foo_stash->add_symbol('%zork');
+
+    my $syms = $foo_stash->get_all_symbols('HASH');
+
+    is_deeply(
+        [ sort keys %{ $syms } ],
+        [ sort $foo_stash->list_all_symbols('HASH') ],
+        '... the fetched symbols are the same as the listed ones'
+    );
+
+    foreach my $symbol (keys %{ $syms }) {
+        is($syms->{$symbol}, $foo_stash->get_symbol('%' . $symbol), '... got the right symbol');
+    }
+
+    no warnings 'once';
+    is_deeply(
+        $syms,
+        { zork => \%Foo::zork },
+        "got the right ones",
+    );
+}
+
 # check some errors
 
 like(exception {

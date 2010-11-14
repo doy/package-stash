@@ -143,6 +143,22 @@ use Symbol;
     } "list_all_symbols doesn't leak";
 }
 
+{
+    package Blah;
+    use constant 'baz';
+}
+
+{
+    my $foo = Package::Stash->new('Foo');
+    my $blah = Package::Stash->new('Blah');
+    no_leaks_ok {
+        $foo->get_all_symbols;
+        $foo->get_all_symbols('SCALAR');
+        $foo->get_all_symbols('CODE');
+        $blah->get_all_symbols('CODE');
+    } "list_all_symbols doesn't leak";
+}
+
 # mimic CMOP::create_anon_class
 {
     local $TODO = $] < 5.010 ? "deleting stashes is inherently leaky on 5.8"
