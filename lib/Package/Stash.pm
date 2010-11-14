@@ -148,6 +148,13 @@ etc). Note that if the package contained any C<BEGIN> blocks, perl will leave
 an empty typeglob in the C<BEGIN> slot, so this will show up if no filter is
 used (and similarly for C<INIT>, C<END>, etc).
 
+=method get_all_symbols $type_filter
+
+Returns a hashref, keyed by the variable names in the package. If
+C<$type_filter> is passed, the hash will contain every variable of that type in
+the package as values, otherwise, it will contain the typeglobs corresponding
+to the variable names (basically, a clone of the stash).
+
 =head1 BUGS
 
 No known bugs.
