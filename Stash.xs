@@ -80,12 +80,6 @@
     GvIOp(g) = (IO*)(v);                \
 } while (0)
 
-/* XXX: the core implementation of caller() is private, so we need a
- * a reimplementation. luckily, padwalker already has done this. rafl says
- * that there should be a public interface in 5.14, so maybe look into
- * converting to use that at some point */
-#include "stolen_bits_of_padwalker.c"
-
 typedef enum {
     VAR_NONE = 0,
     VAR_SCALAR,
@@ -454,18 +448,10 @@ add_symbol(self, variable, initial=NULL, ...)
         }
 
         if (!filename || first_line_num == -1) {
-            I32 cxix_from, cxix_to;
-            PERL_CONTEXT *cx, *ccstack;
-            COP *cop = NULL;
-
-            cx = upcontext(0, &cop, &ccstack, &cxix_from, &cxix_to);
-            if (!cop)
-                cop = PL_curcop;
-
             if (!filename)
-                filename = CopFILE(cop);
+                filename = CopFILE(PL_curcop);
             if (first_line_num == -1)
-                first_line_num = cop->cop_line;
+                first_line_num = PL_curcop->cop_line;
         }
 
         if (last_line_num == -1)

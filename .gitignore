@@ -12,5 +12,4 @@ MANIFEST.bak
 Package-Stash-*
 *.bs
 *.c
-!stolen_bits_of_padwalker.c
 *.o
