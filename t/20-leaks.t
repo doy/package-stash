@@ -49,22 +49,22 @@ use Symbol;
 {
     my $foo = Package::Stash->new('Foo');
     no_leaks_ok {
-        $foo->add_package_symbol('$scalar');
-        $foo->add_package_symbol('@array');
-        $foo->add_package_symbol('%hash');
-        $foo->add_package_symbol('io');
-    } "add_package_symbol doesn't leak";
+        $foo->add_symbol('$scalar');
+        $foo->add_symbol('@array');
+        $foo->add_symbol('%hash');
+        $foo->add_symbol('io');
+    } "add_symbol doesn't leak";
 }
 
 {
     my $foo = Package::Stash->new('Foo');
     no_leaks_ok {
-        $foo->add_package_symbol('$scalar_init' => 1);
-        $foo->add_package_symbol('@array_init' => []);
-        $foo->add_package_symbol('%hash_init' => {});
-        $foo->add_package_symbol('&code_init' => sub { "foo" });
-        $foo->add_package_symbol('io_init' => Symbol::geniosym);
-    } "add_package_symbol doesn't leak";
+        $foo->add_symbol('$scalar_init' => 1);
+        $foo->add_symbol('@array_init' => []);
+        $foo->add_symbol('%hash_init' => {});
+        $foo->add_symbol('&code_init' => sub { "foo" });
+        $foo->add_symbol('io_init' => Symbol::geniosym);
+    } "add_symbol doesn't leak";
     is(exception {
         is(Foo->code_init, 'foo', "sub installed correctly")
     }, undef, "code_init exists");
@@ -73,60 +73,60 @@ use Symbol;
 {
     my $foo = Package::Stash->new('Foo');
     no_leaks_ok {
-        $foo->remove_package_symbol('$scalar_init');
-        $foo->remove_package_symbol('@array_init');
-        $foo->remove_package_symbol('%hash_init');
-        $foo->remove_package_symbol('&code_init');
-        $foo->remove_package_symbol('io_init');
-    } "remove_package_symbol doesn't leak";
+        $foo->remove_symbol('$scalar_init');
+        $foo->remove_symbol('@array_init');
+        $foo->remove_symbol('%hash_init');
+        $foo->remove_symbol('&code_init');
+        $foo->remove_symbol('io_init');
+    } "remove_symbol doesn't leak";
 }
 
 {
     my $foo = Package::Stash->new('Foo');
-    $foo->add_package_symbol("${_}glob") for ('$', '@', '%', '&', '');
+    $foo->add_symbol("${_}glob") for ('$', '@', '%', '&', '');
     no_leaks_ok {
-        $foo->remove_package_glob('glob');
-    } "remove_package_glob doesn't leak";
-}
-
-{
-    my $foo = Package::Stash->new('Foo');
-    no_leaks_ok {
-        $foo->has_package_symbol('io');
-        $foo->has_package_symbol('%hash');
-        $foo->has_package_symbol('@array_init');
-        $foo->has_package_symbol('$glob');
-        $foo->has_package_symbol('&something_else');
-    } "has_package_symbol doesn't leak";
+        $foo->remove_glob('glob');
+    } "remove_glob doesn't leak";
 }
 
 {
     my $foo = Package::Stash->new('Foo');
     no_leaks_ok {
-        $foo->get_package_symbol('io');
-        $foo->get_package_symbol('%hash');
-        $foo->get_package_symbol('@array_init');
-        $foo->get_package_symbol('$glob');
-        $foo->get_package_symbol('&something_else');
-    } "get_package_symbol doesn't leak";
+        $foo->has_symbol('io');
+        $foo->has_symbol('%hash');
+        $foo->has_symbol('@array_init');
+        $foo->has_symbol('$glob');
+        $foo->has_symbol('&something_else');
+    } "has_symbol doesn't leak";
 }
 
 {
     my $foo = Package::Stash->new('Foo');
-    ok(!$foo->has_package_symbol('$glob'));
-    ok(!$foo->has_package_symbol('@array_init'));
     no_leaks_ok {
-        $foo->get_or_add_package_symbol('io');
-        $foo->get_or_add_package_symbol('%hash');
+        $foo->get_symbol('io');
+        $foo->get_symbol('%hash');
+        $foo->get_symbol('@array_init');
+        $foo->get_symbol('$glob');
+        $foo->get_symbol('&something_else');
+    } "get_symbol doesn't leak";
+}
+
+{
+    my $foo = Package::Stash->new('Foo');
+    ok(!$foo->has_symbol('$glob'));
+    ok(!$foo->has_symbol('@array_init'));
+    no_leaks_ok {
+        $foo->get_or_add_symbol('io');
+        $foo->get_or_add_symbol('%hash');
         my @super = ('Exporter');
-        @{$foo->get_or_add_package_symbol('@ISA')} = @super;
-        $foo->get_or_add_package_symbol('$glob');
-    } "get_or_add_package_symbol doesn't leak";
-    ok($foo->has_package_symbol('$glob'));
-    is(ref($foo->get_package_symbol('$glob')), 'SCALAR');
-    ok($foo->has_package_symbol('@ISA'));
-    is(ref($foo->get_package_symbol('@ISA')), 'ARRAY');
-    is_deeply($foo->get_package_symbol('@ISA'), ['Exporter']);
+        @{$foo->get_or_add_symbol('@ISA')} = @super;
+        $foo->get_or_add_symbol('$glob');
+    } "get_or_add_symbol doesn't leak";
+    ok($foo->has_symbol('$glob'));
+    is(ref($foo->get_symbol('$glob')), 'SCALAR');
+    ok($foo->has_symbol('@ISA'));
+    is(ref($foo->get_symbol('@ISA')), 'ARRAY');
+    is_deeply($foo->get_symbol('@ISA'), ['Exporter']);
     isa_ok('Foo', 'Exporter');
 }
 
@@ -134,11 +134,11 @@ use Symbol;
     my $foo = Package::Stash->new('Foo');
     my $baz = Package::Stash->new('Baz');
     no_leaks_ok {
-        $foo->list_all_package_symbols;
-        $foo->list_all_package_symbols('SCALAR');
-        $foo->list_all_package_symbols('CODE');
-        $baz->list_all_package_symbols('CODE');
-    } "list_all_package_symbols doesn't leak";
+        $foo->list_all_symbols;
+        $foo->list_all_symbols('SCALAR');
+        $foo->list_all_symbols('CODE');
+        $baz->list_all_symbols('CODE');
+    } "list_all_symbols doesn't leak";
 }
 
 # mimic CMOP::create_anon_class
@@ -148,9 +148,9 @@ use Symbol;
         $i++;
         eval "package Quux$i; 1;";
         my $quux = Package::Stash->new("Quux$i");
-        $quux->get_or_add_package_symbol('@ISA');
+        $quux->get_or_add_symbol('@ISA');
         delete $::{'Quux' . $i . '::'};
-    } "get_package_symbol doesn't leak during glob expansion";
+    } "get_symbol doesn't leak during glob expansion";
 }
 
 done_testing;

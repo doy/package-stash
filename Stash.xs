@@ -198,7 +198,7 @@ SV *_get_name(SV *self)
     return ret;
 }
 
-SV *_get_package_symbol(SV *self, varspec_t *variable, int vivify)
+SV *_get_symbol(SV *self, varspec_t *variable, int vivify)
 {
     HV *namespace;
     SV **entry;
@@ -326,7 +326,7 @@ namespace(self)
     RETVAL
 
 void
-add_package_symbol(self, variable, initial=NULL, ...)
+add_symbol(self, variable, initial=NULL, ...)
     SV *self
     varspec_t variable
     SV *initial
@@ -362,24 +362,24 @@ add_package_symbol(self, variable, initial=NULL, ...)
         I32 first_line_num, last_line_num;
 
         if ((items - 3) % 2)
-            croak("add_package_symbol: Odd number of elements in %%opts");
+            croak("add_symbol: Odd number of elements in %%opts");
 
         for (i = 3; i < items; i += 2) {
             char *key;
             key = SvPV_nolen(ST(i));
             if (strEQ(key, "filename")) {
                 if (!SvPOK(ST(i + 1)))
-                    croak("add_package_symbol: filename must be a string");
+                    croak("add_symbol: filename must be a string");
                 filename = SvPV_nolen(ST(i + 1));
             }
             else if (strEQ(key, "first_line_num")) {
                 if (!SvIOK(ST(i + 1)))
-                    croak("add_package_symbol: first_line_num must be an integer");
+                    croak("add_symbol: first_line_num must be an integer");
                 first_line_num = SvIV(ST(i + 1));
             }
             else if (strEQ(key, "last_line_num")) {
                 if (!SvIOK(ST(i + 1)))
-                    croak("add_package_symbol: last_line_num must be an integer");
+                    croak("add_symbol: last_line_num must be an integer");
                 last_line_num = SvIV(ST(i + 1));
             }
         }
@@ -436,14 +436,14 @@ add_package_symbol(self, variable, initial=NULL, ...)
     SvREFCNT_dec(name);
 
 void
-remove_package_glob(self, name)
+remove_glob(self, name)
     SV *self
     char *name
   CODE:
     hv_delete(_get_namespace(self), name, strlen(name), G_DISCARD);
 
 int
-has_package_symbol(self, variable)
+has_symbol(self, variable)
     SV *self
     varspec_t variable
   PREINIT:
@@ -482,13 +482,13 @@ has_package_symbol(self, variable)
     RETVAL
 
 SV*
-get_package_symbol(self, variable)
+get_symbol(self, variable)
     SV *self
     varspec_t variable
   PREINIT:
     SV *val;
   CODE:
-    val = _get_package_symbol(self, &variable, 0);
+    val = _get_symbol(self, &variable, 0);
     if (!val)
         XSRETURN_UNDEF;
     RETVAL = newRV_inc(val);
@@ -496,13 +496,13 @@ get_package_symbol(self, variable)
     RETVAL
 
 SV*
-get_or_add_package_symbol(self, variable)
+get_or_add_symbol(self, variable)
     SV *self
     varspec_t variable
   PREINIT:
     SV *val;
   CODE:
-    val = _get_package_symbol(self, &variable, 1);
+    val = _get_symbol(self, &variable, 1);
     if (!val)
         XSRETURN_UNDEF;
     RETVAL = newRV_inc(val);
@@ -510,7 +510,7 @@ get_or_add_package_symbol(self, variable)
     RETVAL
 
 void
-remove_package_symbol(self, variable)
+remove_symbol(self, variable)
     SV *self
     varspec_t variable
   PREINIT:
@@ -551,7 +551,7 @@ remove_package_symbol(self, variable)
     }
 
 void
-list_all_package_symbols(self, vartype=VAR_NONE)
+list_all_symbols(self, vartype=VAR_NONE)
     SV *self
     vartype_t vartype
   PPCODE:
