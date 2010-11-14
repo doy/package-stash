@@ -80,6 +80,12 @@
     GvIOp(g) = (IO*)(v);                \
 } while (0)
 
+/* XXX: the core implementation of caller() is private, so we need a
+ * a reimplementation. luckily, padwalker already has done this. rafl says
+ * that there should be a public interface in 5.14, so maybe look into
+ * converting to use that at some point */
+#include "stolen_bits_of_padwalker.c"
+
 typedef enum {
     VAR_NONE = 0,
     VAR_SCALAR,
@@ -416,24 +422,13 @@ add_symbol(self, variable, initial=NULL, ...)
     sv_catpvs(name, "::");
     sv_catpv(name, variable.name);
 
-    /* XXX: come back to this when i feel like reimplementing caller() */
-/*
-    my $filename = $opts{filename};
-    my $first_line_num = $opts{first_line_num};
-
-    (undef, $filename, $first_line_num) = caller
-        if not defined $filename;
-
-    my $last_line_num = $opts{last_line_num} || ($first_line_num ||= 0);
-
-    # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
-    $DB::sub{$pkg . '::' . $name} = "$filename:$first_line_num-$last_line_num";
-*/
-/*
     if (items > 2 && (PL_perldb & 0x10) && variable.type == VAR_CODE) {
         int i;
-        char *filename = NULL, *name;
-        I32 first_line_num, last_line_num;
+        char *filename = NULL, *namepv;
+        I32 first_line_num = -1, last_line_num = -1;
+        STRLEN namelen;
+        SV *dbval;
+        HV *dbsub;
 
         if ((items - 3) % 2)
             croak("add_symbol: Odd number of elements in %%opts");
@@ -458,10 +453,33 @@ add_symbol(self, variable, initial=NULL, ...)
             }
         }
 
-        if (!filename) {
+        if (!filename || first_line_num == -1) {
+            I32 cxix_from, cxix_to;
+            PERL_CONTEXT *cx, *ccstack;
+            COP *cop = NULL;
+
+            cx = upcontext(0, &cop, &ccstack, &cxix_from, &cxix_to);
+            if (!cop)
+                cop = PL_curcop;
+
+            if (!filename)
+                filename = CopFILE(cop);
+            if (first_line_num == -1)
+                first_line_num = cop->cop_line;
+        }
+
+        if (last_line_num == -1)
+            last_line_num = first_line_num;
+
+        /* http://perldoc.perl.org/perldebguts.html#Debugger-Internals */
+        dbsub = get_hv("DB::sub", 1);
+        dbval = newSVpvf("%s:%d-%d", filename, first_line_num, last_line_num);
+        namepv = SvPV(name, namelen);
+        if (!hv_store(dbsub, namepv, namelen, dbval, 0)) {
+            warn("Failed to update $DB::sub for subroutine %s", namepv);
+            SvREFCNT_dec(dbval);
         }
     }
-*/
 
     /* GV_ADDMULTI rather than GV_ADD because otherwise you get 'used only
      * once' warnings in some situations... i can't reproduce this, but CMOP
