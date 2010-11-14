@@ -211,8 +211,8 @@ L<http://search.cpan.org/dist/Package-Stash>
 
 Jesse Luehrs <doy at tozt dot net>
 
-Mostly copied from code from L<Class::MOP::Package>, by Stevan Little and the
-Moose Cabal.
+Based on code from L<Class::MOP::Package>, by Stevan Little and the Moose
+Cabal.
 
 =cut
 
