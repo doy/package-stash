@@ -153,4 +153,11 @@ use Symbol;
     } "get_symbol doesn't leak during glob expansion";
 }
 
+{
+    my $foo = Package::Stash->new('Foo');
+    no_leaks_ok {
+        eval { $foo->get_or_add_symbol('&blorg') };
+    } "doesn't leak on errors";
+}
+
 done_testing;
