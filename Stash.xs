@@ -39,6 +39,8 @@
 #define GvCVOK(g) GvCVu(g) /* XXX: should this really be GvCVu? or GvCV? */
 #define GvIOOK(g) GvIO(g)
 
+/* see above - don't let scalar slots become unpopulated, this breaks
+ * assumptions in core */
 #if PERL_VERSION < 10
 #define GvSetSV(g,v) do {               \
     SV *_v = (SV*)(v);                  \
@@ -461,6 +463,9 @@ add_symbol(self, variable, initial=NULL, ...)
     }
 */
 
+    /* GV_ADDMULTI rather than GV_ADD because otherwise you get 'used only
+     * once' warnings in some situations... i can't reproduce this, but CMOP
+     * triggers it */
     glob = gv_fetchsv(name, GV_ADDMULTI, vartype_to_svtype(variable.type));
 
     if (initial) {
