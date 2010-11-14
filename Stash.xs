@@ -2,6 +2,10 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#define NEED_newRV_noinc
+#define NEED_sv_2pv_flags
+#include "ppport.h"
+
 typedef enum {
     VAR_NONE = 0,
     VAR_SCALAR,
