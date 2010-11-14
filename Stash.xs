@@ -99,7 +99,6 @@ typedef enum {
 
 typedef struct {
     vartype_t type;
-    char sigil;
     char *name;
 } varspec_t;
 
@@ -184,12 +183,10 @@ void _deconstruct_variable_name(char *variable, varspec_t *varspec)
     }
 
     if (varspec->type != VAR_NONE) {
-        varspec->sigil = variable[0];
         varspec->name = &variable[1];
     }
     else {
         varspec->type = VAR_IO;
-        varspec->sigil = '\0';
         varspec->name = variable;
     }
 }
@@ -204,12 +201,6 @@ void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
 
     varspec->name = savesvpv(*val);
     SAVEFREEPV(varspec->name);
-
-    val = hv_fetch(variable, "sigil", 5, 0);
-    if (!val)
-        croak("The 'sigil' key is required in variable specs");
-
-    varspec->sigil = (SvPV_nolen(*val))[0];
 
     val = hv_fetch(variable, "type", 4, 0);
     if (!val)
