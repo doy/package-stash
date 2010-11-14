@@ -102,6 +102,9 @@ typedef struct {
     char *name;
 } varspec_t;
 
+static U32 name_hash, namespace_hash, type_hash;
+static SV *name_key, *namespace_key, *type_key;
+
 const char *vartype_to_string(vartype_t type)
 {
     switch (type) {
@@ -193,20 +196,24 @@ void _deconstruct_variable_name(char *variable, varspec_t *varspec)
 
 void _deconstruct_variable_hash(HV *variable, varspec_t *varspec)
 {
-    SV **val;
+    HE *val;
+    char *valpv;
+    STRLEN len;
 
-    val = hv_fetch(variable, "name", 4, 0);
+    val = hv_fetch_ent(variable, name_key, 0, name_hash);
     if (!val)
         croak("The 'name' key is required in variable specs");
 
-    varspec->name = savesvpv(*val);
+    valpv = HePV(val, len);
+    varspec->name = savepvn(valpv, len);
     SAVEFREEPV(varspec->name);
 
-    val = hv_fetch(variable, "type", 4, 0);
+    val = hv_fetch_ent(variable, type_key, 0, type_hash);
     if (!val)
         croak("The 'type' key is required in variable specs");
 
-    varspec->type = string_to_vartype(SvPV_nolen(*val));
+    valpv = HePV(val, len);
+    varspec->type = string_to_vartype(valpv);
 }
 
 int _valid_for_type(SV *value, vartype_t type)
@@ -374,12 +381,12 @@ SV*
 name(self)
     SV *self
   PREINIT:
-    SV **slot;
+    HE *slot;
   CODE:
     if (!sv_isobject(self))
         croak("Can't call name as a class method");
-    slot = hv_fetch((HV*)SvRV(self), "name", 4, 0);
-    RETVAL = slot ? SvREFCNT_inc_simple_NN(*slot) : &PL_sv_undef;
+    slot = hv_fetch_ent((HV*)SvRV(self), name_key, 0, name_hash);
+    RETVAL = slot ? SvREFCNT_inc_simple_NN(HeVAL(slot)) : &PL_sv_undef;
   OUTPUT:
     RETVAL
 
@@ -387,12 +394,12 @@ SV*
 namespace(self)
     SV *self
   PREINIT:
-    SV **slot;
+    HE *slot;
   CODE:
     if (!sv_isobject(self))
         croak("Can't call namespace as a class method");
-    slot = hv_fetch((HV*)SvRV(self), "namespace", 9, 0);
-    RETVAL = slot ? SvREFCNT_inc_simple_NN(*slot) : &PL_sv_undef;
+    slot = hv_fetch_ent((HV*)SvRV(self), namespace_key, 0, namespace_hash);
+    RETVAL = slot ? SvREFCNT_inc_simple_NN(HeVAL(slot)) : &PL_sv_undef;
   OUTPUT:
     RETVAL
 
@@ -677,4 +684,16 @@ list_all_symbols(self, vartype=VAR_NONE)
                 mXPUSHp(key, len);
             }
         }
+    }
+
+BOOT:
+    {
+        name_key = newSVpvs("name");
+        PERL_HASH(name_hash, "name", 4);
+
+        namespace_key = newSVpvs("namespace");
+        PERL_HASH(namespace_hash, "namespace", 9);
+
+        type_key = newSVpvs("type");
+        PERL_HASH(type_hash, "type", 4);
     }
