@@ -122,7 +122,9 @@ use Symbol;
         @{$foo->get_or_add_symbol('@ISA')} = @super;
         $foo->get_or_add_symbol('$glob');
     } "get_or_add_symbol doesn't leak";
+    { local $TODO = $] < 5.010 ? "undef scalars aren't visible on 5.8" : undef;
     ok($foo->has_symbol('$glob'));
+    }
     is(ref($foo->get_symbol('$glob')), 'SCALAR');
     ok($foo->has_symbol('@ISA'));
     is(ref($foo->get_symbol('@ISA')), 'ARRAY');
