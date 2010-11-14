@@ -6,6 +6,24 @@
 #define NEED_sv_2pv_flags
 #include "ppport.h"
 
+#ifndef gv_fetchsv
+#define gv_fetchsv(n,f,t) gv_fetchpv(SvPV_nolen(n), f, t)
+#endif
+
+#ifndef mro_method_changed_in
+#define mro_method_changed_in(x) PL_sub_generation++
+#endif
+
+#ifdef newSVhek
+#define newSVhe(he) newSVhek(HeKEY_hek(he))
+#else
+#define newSVhe(he) newSVpvn(HePV(he))
+#endif
+
+#ifndef savesvpv
+#define savesvpv(s) savepv(SvPV_nolen(s))
+#endif
+
 typedef enum {
     VAR_NONE = 0,
     VAR_SCALAR,
@@ -564,7 +582,7 @@ list_all_symbols(self, vartype=VAR_NONE)
         keys = hv_iterinit(namespace);
         EXTEND(SP, keys);
         while ((entry = hv_iternext(namespace))) {
-            mPUSHs(newSVhek(HeKEY_hek(entry)));
+            mPUSHs(newSVhe(entry));
         }
     }
     else {
