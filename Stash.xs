@@ -17,7 +17,7 @@
 #ifdef newSVhek
 #define newSVhe(he) newSVhek(HeKEY_hek(he))
 #else
-#define newSVhe(he) newSVpvn(HePV(he))
+#define newSVhe(he) newSVpv(HePV(he, PL_na), 0)
 #endif
 
 #ifndef savesvpv
