@@ -214,6 +214,18 @@ Jesse Luehrs <doy at tozt dot net>
 Based on code from L<Class::MOP::Package>, by Stevan Little and the Moose
 Cabal.
 
+=begin Pod::Coverage
+
+add_package_symbol
+remove_package_glob
+has_package_symbol
+get_package_symbol
+get_or_add_package_symbol
+remove_package_symbol
+list_all_package_symbols
+
+=end Pod::Coverage
+
 =cut
 
 1;
