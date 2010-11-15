@@ -1,6 +1,7 @@
+#!/usr/bin/env perl
 use strict;
 use warnings;
-
+use lib 't/lib';
 use Test::More;
 use Test::Fatal;
 
@@ -15,9 +16,9 @@ my $foo_stash = Package::Stash->new('Foo');
 
 ok(!defined($Foo::{funk}), '... the &funk slot has not been created yet');
 
-ok(!exception {
-    $foo_stash->add_package_symbol('&funk' => sub { "Foo::funk", __LINE__ });
-}, '... created &Foo::funk successfully');
+is(exception {
+    $foo_stash->add_symbol('&funk' => sub { "Foo::funk", __LINE__ });
+}, undef, '... created &Foo::funk successfully');
 
 ok(defined($Foo::{funk}), '... the &funk slot was created successfully');
 
@@ -32,7 +33,7 @@ my $line = (Foo->funk())[1];
 is $DB::sub{'Foo::funk'}, sprintf "%s:%d-%d", __FILE__, $line, $line,
     '... got the right %DB::sub value for funk default args';
 
-$foo_stash->add_package_symbol(
+$foo_stash->add_symbol(
     '&dunk'        => sub { "Foo::dunk" },
     filename       => "FileName",
     first_line_num => 100,

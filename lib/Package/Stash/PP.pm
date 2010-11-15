@@ -1,10 +1,10 @@
-package Package::Stash;
+package Package::Stash::PP;
 use strict;
 use warnings;
-# ABSTRACT: routines for manipulating stashes
+# ABSTRACT: pure perl implementation of the Package::Stash API
 
 use Carp qw(confess);
-use Scalar::Util qw(reftype);
+use Scalar::Util qw(blessed reftype);
 use Symbol;
 # before 5.12, assigning to the ISA glob would make it lose its magical ->isa
 # powers
@@ -12,26 +12,11 @@ use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
 
 =head1 SYNOPSIS
 
-  my $stash = Package::Stash->new('Foo');
-  $stash->add_package_symbol('%foo', {bar => 1});
-  # $Foo::foo{bar} == 1
-  $stash->has_package_symbol('$foo') # false
-  my $namespace = $stash->namespace;
-  *{ $namespace->{foo} }{HASH} # {bar => 1}
+  use Package::Stash;
 
 =head1 DESCRIPTION
 
-Manipulating stashes (Perl's symbol tables) is occasionally necessary, but
-incredibly messy, and easy to get wrong. This module hides all of that behind a
-simple API.
-
-NOTE: Most methods in this class require a variable specification that includes
-a sigil. If this sigil is absent, it is assumed to represent the IO slot.
-
-=method new $package_name
-
-Creates a new C<Package::Stash> object, for the package given as the only
-argument.
+This is a backend for L<Package::Stash> implemented in pure perl, for those without a compiler or who would like to use this inline in scripts.
 
 =cut
 
@@ -51,23 +36,15 @@ sub new {
     }, $class;
 }
 
-=method name
-
-Returns the name of the package that this object represents.
-
-=cut
-
 sub name {
+    confess "Can't call name as a class method"
+        unless blessed($_[0]);
     return $_[0]->{package};
 }
 
-=method namespace
-
-Returns the raw stash itself.
-
-=cut
-
 sub namespace {
+    confess "Can't call namespace as a class method"
+        unless blessed($_[0]);
     return $_[0]->{namespace};
 }
 
@@ -97,34 +74,6 @@ sub namespace {
     }
 }
 
-=method add_package_symbol $variable $value %opts
-
-Adds a new package symbol, for the symbol given as C<$variable>, and optionally
-gives it an initial value of C<$value>. C<$variable> should be the name of
-variable including the sigil, so
-
-  Package::Stash->new('Foo')->add_package_symbol('%foo')
-
-will create C<%Foo::foo>.
-
-Valid options (all optional) are C<filename>, C<first_line_num>, and
-C<last_line_num>.
-
-C<$opts{filename}>, C<$opts{first_line_num}>, and C<$opts{last_line_num}> can
-be used to indicate where the symbol should be regarded as having been defined.
-Currently these values are only used if the symbol is a subroutine ('C<&>'
-sigil) and only if C<$^P & 0x10> is true, in which case the special C<%DB::sub>
-hash is updated to record the values of C<filename>, C<first_line_num>, and
-C<last_line_num> for the subroutine. If these are not passed, their values are
-inferred (as much as possible) from C<caller> information.
-
-This is especially useful for debuggers and profilers, which use C<%DB::sub> to
-determine where the source code for a subroutine can be found.  See
-L<http://perldoc.perl.org/perldebguts.html#Debugger-Internals> for more
-information about C<%DB::sub>.
-
-=cut
-
 sub _valid_for_type {
     my $self = shift;
     my ($value, $type) = @_;
@@ -138,7 +87,7 @@ sub _valid_for_type {
     }
 }
 
-sub add_package_symbol {
+sub add_symbol {
     my ($self, $variable, $initial_value, %opts) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
@@ -171,27 +120,13 @@ sub add_package_symbol {
     *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
 }
 
-=method remove_package_glob $name
-
-Removes all package variables with the given name, regardless of sigil.
-
-=cut
-
-sub remove_package_glob {
+sub remove_glob {
     my ($self, $name) = @_;
     no strict 'refs';
     delete ${$self->name . '::'}{$name};
 }
 
-# ... these functions deal with stuff on the namespace level
-
-=method has_package_symbol $variable
-
-Returns whether or not the given package variable (including sigil) exists.
-
-=cut
-
-sub has_package_symbol {
+sub has_symbol {
     my ($self, $variable) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
@@ -222,13 +157,7 @@ sub has_package_symbol {
     }
 }
 
-=method get_package_symbol $variable
-
-Returns the value of the given package variable (including sigil).
-
-=cut
-
-sub get_package_symbol {
+sub get_symbol {
     my ($self, $variable, %opts) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
@@ -241,23 +170,23 @@ sub get_package_symbol {
         if ($opts{vivify}) {
             if ($type eq 'ARRAY') {
                 if (BROKEN_ISA_ASSIGNMENT) {
-                    $self->add_package_symbol(
+                    $self->add_symbol(
                         $variable,
                         $name eq 'ISA' ? () : ([])
                     );
                 }
                 else {
-                    $self->add_package_symbol($variable, []);
+                    $self->add_symbol($variable, []);
                 }
             }
             elsif ($type eq 'HASH') {
-                $self->add_package_symbol($variable, {});
+                $self->add_symbol($variable, {});
             }
             elsif ($type eq 'SCALAR') {
-                $self->add_package_symbol($variable);
+                $self->add_symbol($variable);
             }
             elsif ($type eq 'IO') {
-                $self->add_package_symbol($variable, Symbol::geniosym);
+                $self->add_symbol($variable, Symbol::geniosym);
             }
             elsif ($type eq 'CODE') {
                 confess "Don't know how to vivify CODE variables";
@@ -272,7 +201,7 @@ sub get_package_symbol {
                 # this, referencing the coderef at the end of this function
                 # will cause perl to auto-vivify a stub coderef in the slot,
                 # which isn't what we want
-                $self->add_package_symbol($variable);
+                $self->add_symbol($variable);
             }
         }
     }
@@ -293,27 +222,12 @@ sub get_package_symbol {
     }
 }
 
-=method get_or_add_package_symbol $variable
-
-Like C<get_package_symbol>, except that it will return an empty hashref or
-arrayref if the variable doesn't exist.
-
-=cut
-
-sub get_or_add_package_symbol {
+sub get_or_add_symbol {
     my $self = shift;
-    $self->get_package_symbol(@_, vivify => 1);
+    $self->get_symbol(@_, vivify => 1);
 }
 
-=method remove_package_symbol $variable
-
-Removes the package variable described by C<$variable> (which includes the
-sigil); other variables with the same name but different sigils will be
-untouched.
-
-=cut
-
-sub remove_package_symbol {
+sub remove_symbol {
     my ($self, $variable) = @_;
 
     my ($name, $sigil, $type) = ref $variable eq 'HASH'
@@ -334,60 +248,49 @@ sub remove_package_symbol {
 
     my ($scalar, $array, $hash, $code, $io);
     if ($type eq 'SCALAR') {
-        $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
-        $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
-        $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
-        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
+        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
+        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
+        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
+        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'ARRAY') {
-        $scalar = $self->get_package_symbol($scalar_desc);
-        $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
-        $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
-        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
+        $scalar = $self->get_symbol($scalar_desc);
+        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
+        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
+        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'HASH') {
-        $scalar = $self->get_package_symbol($scalar_desc);
-        $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
-        $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
-        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
+        $scalar = $self->get_symbol($scalar_desc);
+        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
+        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
+        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'CODE') {
-        $scalar = $self->get_package_symbol($scalar_desc);
-        $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
-        $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
-        $io     = $self->get_package_symbol($io_desc)     if $self->has_package_symbol($io_desc);
+        $scalar = $self->get_symbol($scalar_desc);
+        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
+        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
+        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'IO') {
-        $scalar = $self->get_package_symbol($scalar_desc);
-        $array  = $self->get_package_symbol($array_desc)  if $self->has_package_symbol($array_desc);
-        $hash   = $self->get_package_symbol($hash_desc)   if $self->has_package_symbol($hash_desc);
-        $code   = $self->get_package_symbol($code_desc)   if $self->has_package_symbol($code_desc);
+        $scalar = $self->get_symbol($scalar_desc);
+        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
+        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
+        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
     }
     else {
         confess "This should never ever ever happen";
     }
 
-    $self->remove_package_glob($name);
+    $self->remove_glob($name);
 
-    $self->add_package_symbol($scalar_desc => $scalar);
-    $self->add_package_symbol($array_desc  => $array)  if defined $array;
-    $self->add_package_symbol($hash_desc   => $hash)   if defined $hash;
-    $self->add_package_symbol($code_desc   => $code)   if defined $code;
-    $self->add_package_symbol($io_desc     => $io)     if defined $io;
+    $self->add_symbol($scalar_desc => $scalar);
+    $self->add_symbol($array_desc  => $array)  if defined $array;
+    $self->add_symbol($hash_desc   => $hash)   if defined $hash;
+    $self->add_symbol($code_desc   => $code)   if defined $code;
+    $self->add_symbol($io_desc     => $io)     if defined $io;
 }
 
-=method list_all_package_symbols $type_filter
-
-Returns a list of package variable names in the package, without sigils. If a
-C<type_filter> is passed, it is used to select package variables of a given
-type, where valid types are the slots of a typeglob ('SCALAR', 'CODE', 'HASH',
-etc). Note that if the package contained any C<BEGIN> blocks, perl will leave
-an empty typeglob in the C<BEGIN> slot, so this will show up if no filter is
-used (and similarly for C<INIT>, C<END>, etc).
-
-=cut
-
-sub list_all_package_symbols {
+sub list_all_symbols {
     my ($self, $type_filter) = @_;
 
     my $namespace = $self->namespace;
@@ -418,9 +321,37 @@ sub list_all_package_symbols {
     }
 }
 
+sub get_all_symbols {
+    my ($self, $type_filter) = @_;
+
+    my $namespace = $self->namespace;
+    return { %{$namespace} } unless defined $type_filter;
+
+    return {
+        map { $_ => $self->get_symbol({name => $_, type => $type_filter}) }
+            $self->list_all_symbols($type_filter)
+    }
+}
+
 =head1 BUGS
 
-No known bugs.
+=over 4
+
+=item * Scalar slots are only considered to exist if they are defined
+
+This is due to a shortcoming within perl itself. See
+L<perlref/Making References> point 7 for more information.
+
+=item * remove_symbol also replaces the associated typeglob
+
+This can cause unexpected behavior when doing manipulation at compile time -
+removing subroutines will still allow them to be called from within the package
+as subroutines (although they will not be available as methods). This can be
+considered a feature in some cases (this is how L<namespace::clean> works, for
+instance), but should not be relied upon - use C<remove_glob> directly if you
+want this behavior.
+
+=back
 
 Please report any bugs through RT: email
 C<bug-package-stash at rt.cpan.org>, or browse to

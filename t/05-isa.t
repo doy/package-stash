@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use lib 't/lib';
 use Test::More;
 
 use Package::Stash;
@@ -15,7 +16,7 @@ use Package::Stash;
 
 my $stash = Package::Stash->new('Foo');
 my @ISA = ('Bar');
-@{$stash->get_or_add_package_symbol('@ISA')} = @ISA;
+@{$stash->get_or_add_symbol('@ISA')} = @ISA;
 isa_ok('Foo', 'Bar');
 
 done_testing;

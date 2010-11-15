@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use lib 't/lib';
 use Test::More;
 
 use Package::Stash;
@@ -24,21 +25,26 @@ use Package::Stash;
 }
 
 my $stash = Package::Stash->new('Foo');
-{ local $TODO = "i think this is a perl bug (see comment in has_package_symbol)";
-ok($stash->has_package_symbol('$SCALAR'), '$SCALAR');
+{ local $TODO = ($] < 5.010 || $Package::Stash::IMPLEMENTATION eq 'PP')
+      ? "undef scalars aren't visible on 5.8, or from pure perl at all"
+      : undef;
+ok($stash->has_symbol('$SCALAR'), '$SCALAR');
 }
-ok($stash->has_package_symbol('$SCALAR_WITH_VALUE'), '$SCALAR_WITH_VALUE');
-ok($stash->has_package_symbol('@ARRAY'), '@ARRAY');
-ok($stash->has_package_symbol('%HASH'), '%HASH');
+ok($stash->has_symbol('$SCALAR_WITH_VALUE'), '$SCALAR_WITH_VALUE');
+ok($stash->has_symbol('@ARRAY'), '@ARRAY');
+ok($stash->has_symbol('%HASH'), '%HASH');
 is_deeply(
-    [sort $stash->list_all_package_symbols('CODE')],
+    [sort $stash->list_all_symbols('CODE')],
     [qw(BAR BAZ FOO QUUUX QUUX normal normal_with_proto stub stub_with_proto)],
     "can see all code symbols"
 );
 
-$stash->add_package_symbol('%added', {});
-ok(!$stash->has_package_symbol('$added'), '$added');
-ok(!$stash->has_package_symbol('@added'), '@added');
-ok($stash->has_package_symbol('%added'), '%added');
+$stash->add_symbol('%added', {});
+ok(!$stash->has_symbol('$added'), '$added');
+ok(!$stash->has_symbol('@added'), '@added');
+ok($stash->has_symbol('%added'), '%added');
+
+my $constant = $stash->get_symbol('&FOO');
+is(ref($constant), 'CODE', "expanded a constant into a coderef");
 
 done_testing;

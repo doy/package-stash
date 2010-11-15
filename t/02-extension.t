@@ -1,6 +1,7 @@
+#!/usr/bin/env perl
 use strict;
 use warnings;
-
+use lib 't/lib';
 use Test::More;
 use Test::Fatal;
 
@@ -20,10 +21,10 @@ use Test::Fatal;
         return $self;
     }
 
-    sub add_package_symbol {
+    sub add_symbol {
         my ($self, $variable, $initial_value) = @_;
 
-        my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
+        (my $name = $variable) =~ s/^[\$\@\%\&]//;
 
         my $glob = gensym();
         *{$glob} = $initial_value if defined $initial_value;
@@ -38,35 +39,35 @@ isa_ok($foo_stash, 'My::Package::Stash');
 isa_ok($foo_stash, 'Package::Stash');
 
 ok(!defined($Foo::{foo}), '... the %foo slot has not been created yet');
-ok(!$foo_stash->has_package_symbol('%foo'), '... the foo_stash agrees');
+ok(!$foo_stash->has_symbol('%foo'), '... the foo_stash agrees');
 
-ok(!exception {
-    $foo_stash->add_package_symbol('%foo' => { one => 1 });
-}, '... the %foo symbol is created succcessfully');
+is(exception {
+    $foo_stash->add_symbol('%foo' => { one => 1 });
+}, undef, '... the %foo symbol is created succcessfully');
 
 ok(!defined($Foo::{foo}), '... the %foo slot has not been created in the actual Foo package');
-ok($foo_stash->has_package_symbol('%foo'), '... the foo_stash agrees');
+ok($foo_stash->has_symbol('%foo'), '... the foo_stash agrees');
 
-my $foo = $foo_stash->get_package_symbol('%foo');
+my $foo = $foo_stash->get_symbol('%foo');
 is_deeply({ one => 1 }, $foo, '... got the right package variable back');
 
 $foo->{two} = 2;
 
-is($foo, $foo_stash->get_package_symbol('%foo'), '... our %foo is the same as the foo_stashs');
+is($foo, $foo_stash->get_symbol('%foo'), '... our %foo is the same as the foo_stashs');
 
 ok(!defined($Foo::{bar}), '... the @bar slot has not been created yet');
 
-ok(!exception {
-    $foo_stash->add_package_symbol('@bar' => [ 1, 2, 3 ]);
-}, '... created @Foo::bar successfully');
+is(exception {
+    $foo_stash->add_symbol('@bar' => [ 1, 2, 3 ]);
+}, undef, '... created @Foo::bar successfully');
 
 ok(!defined($Foo::{bar}), '... the @bar slot has still not been created');
 
 ok(!defined($Foo::{baz}), '... the %baz slot has not been created yet');
 
-ok(!exception {
-    $foo_stash->add_package_symbol('%baz');
-}, '... created %Foo::baz successfully');
+is(exception {
+    $foo_stash->add_symbol('%baz');
+}, undef, '... created %Foo::baz successfully');
 
 ok(!defined($Foo::{baz}), '... the %baz slot has still not been created');
 
