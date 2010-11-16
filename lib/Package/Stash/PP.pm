@@ -345,6 +345,12 @@ considered a feature in some cases (this is how L<namespace::clean> works, for
 instance), but should not be relied upon - use C<remove_glob> directly if you
 want this behavior.
 
+=item * Some minor memory leaks
+
+The pure perl implementation has a couple minor memory leaks (see the TODO
+tests in t/20-leaks.t) that I'm having a hard time tracking down - these may be
+core perl bugs, it's hard to tell.
+
 =back
 
 Please report any bugs through RT: email
