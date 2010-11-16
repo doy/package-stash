@@ -47,4 +47,9 @@ ok($stash->has_symbol('%added'), '%added');
 my $constant = $stash->get_symbol('&FOO');
 is(ref($constant), 'CODE', "expanded a constant into a coderef");
 
+# ensure get doesn't prevent subsequent vivification (not sure what the deal
+# was here)
+is(ref($stash->get_symbol('$glob')), '', "nothing yet");
+is(ref($stash->get_or_add_symbol('$glob')), 'SCALAR', "got an empty scalar");
+
 done_testing;

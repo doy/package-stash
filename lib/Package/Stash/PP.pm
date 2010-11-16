@@ -196,13 +196,7 @@ sub get_symbol {
             }
         }
         else {
-            if ($type eq 'CODE') {
-                # this effectively "de-vivifies" the code slot. if we don't do
-                # this, referencing the coderef at the end of this function
-                # will cause perl to auto-vivify a stub coderef in the slot,
-                # which isn't what we want
-                $self->add_symbol($variable);
-            }
+            return undef;
         }
     }
 
