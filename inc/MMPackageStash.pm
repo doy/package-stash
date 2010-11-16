@@ -16,6 +16,7 @@ sub check_conflicts {
     my %conflicts = (
         'Class::MOP'                    => '1.08',
         'MooseX::Role::WithOverloading' => '0.08',
+        'namespace::clean'              => '0.18',
     );
     my $found = 0;
     for my $mod ( sort keys %conflicts ) {
