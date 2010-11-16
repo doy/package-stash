@@ -6,25 +6,31 @@ use warnings;
 our $IMPLEMENTATION;
 
 BEGIN {
-    #warn "loading Package::Stash";
     $IMPLEMENTATION = $ENV{PACKAGE_STASH_IMPLEMENTATION}
         if exists $ENV{PACKAGE_STASH_IMPLEMENTATION};
-    #warn "found $IMPLEMENTATION" if $IMPLEMENTATION;
 
-    if (!$IMPLEMENTATION) {
-        #warn "detecting...";
+    my $err;
+    if ($IMPLEMENTATION) {
+        if (!eval "require Package::Stash::$IMPLEMENTATION; 1") {
+            require Carp;
+            Carp::croak("Could not load Package::Stash::$IMPLEMENTATION: $@");
+        }
+    }
+    else {
         for my $impl ('XS', 'PP') {
             if (eval "require Package::Stash::$impl; 1;") {
-                #warn "found $impl";
                 $IMPLEMENTATION = $impl;
                 last;
+            }
+            else {
+                $err .= $@;
             }
         }
     }
 
     if (!$IMPLEMENTATION) {
         require Carp;
-        Carp::croak("Could not find a suitable Package::Stash implementation");
+        Carp::croak("Could not find a suitable Package::Stash implementation: $err");
     }
 
     my $impl = "Package::Stash::$IMPLEMENTATION";
@@ -32,7 +38,6 @@ BEGIN {
     my $to = $impl->new(__PACKAGE__);
     my $methods = $from->get_all_symbols('CODE');
     for my $meth (keys %$methods) {
-        #warn "installing $meth";
         $to->add_symbol("&$meth" => $methods->{$meth});
     }
 }
