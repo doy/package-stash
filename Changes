@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.15-TRIAL  2010-11-16
       - split the XS conversion out to its own dist (Package-Stash-XS), and
         convert Package::Stash into a module which loads either the XS or pure
         perl implementation, depending on what's available
