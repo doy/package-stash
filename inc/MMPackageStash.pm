@@ -7,11 +7,43 @@ extends 'Dist::Zilla::Plugin::MakeMaker::Awesome';
 around _build_MakeFile_PL_template => sub {
     my $orig = shift;
     my $self = shift;
-    my $template = $self->$orig(@_);
 
-    $template =~ s/(use ExtUtils::MakeMaker.*)/$1\n\ncheck_conflicts();/;
+    # copied from M::I
+    my $can_cc = <<'CAN_CC';
+use Config ();
+use File::Spec ();
 
-    $template .= <<'CHECK_CONFLICTS';
+# check if we can run some command
+sub can_run {
+        my ($cmd) = @_;
+
+        my $_cmd = $cmd;
+        return $_cmd if (-x $_cmd or $_cmd = MM->maybe_command($_cmd));
+
+        for my $dir ((split /$Config::Config{path_sep}/, $ENV{PATH}), '.') {
+                next if $dir eq '';
+                my $abs = File::Spec->catfile($dir, $_[1]);
+                return $abs if (-x $abs or $abs = MM->maybe_command($abs));
+        }
+
+        return;
+}
+
+# can we locate a (the) C compiler
+sub can_cc {
+        my @chunks = split(/ /, $Config::Config{cc}) or return;
+
+        # $Config{cc} may contain args; try to find out the program part
+        while (@chunks) {
+                return can_run("@chunks") || (pop(@chunks), next);
+        }
+
+        return;
+}
+CAN_CC
+
+    # copied out of moose
+    my $check_conflicts = <<'CHECK_CONFLICTS';
 sub check_conflicts {
     my %conflicts = (
         'Class::MOP'                    => '1.08',
@@ -52,7 +84,12 @@ EOF
 }
 CHECK_CONFLICTS
 
-    return $template;
+    my $template = $self->$orig(@_);
+
+    $template =~ s/(use ExtUtils::MakeMaker.*)/$1\n\ncheck_conflicts();/;
+    $template =~ s/(WriteMakefile\()/delete \$WriteMakefileArgs{PREREQ_PM}{'Package::Stash::XS'}\n  unless can_cc();\n\n$1/;
+
+    return $template . $can_cc . $check_conflicts;
 };
 
 __PACKAGE__->meta->make_immutable;
