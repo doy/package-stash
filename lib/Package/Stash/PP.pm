@@ -396,6 +396,22 @@ Jesse Luehrs <doy at tozt dot net>
 Mostly copied from code from L<Class::MOP::Package>, by Stevan Little and the
 Moose Cabal.
 
+=begin Pod::Coverage
+
+BROKEN_ISA_ASSIGNMENT
+add_symbol
+get_all_symbols
+get_or_add_symbol
+get_symbol
+has_symbol
+list_all_symbols
+name
+namespace
+new
+remove_glob
+
+=end Pod::Coverage
+
 =cut
 
 1;
