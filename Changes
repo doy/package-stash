@@ -12,6 +12,8 @@ Revision history for Package-Stash
         changes from earlier). should be entirely backwards compatible
         otherwise (in terms of documented api anyway).
 
+      - methods were renamed for brevity: s/_package//
+
 0.13  2010-10-31
       - revert the vivification changes for now, to get an actual release out
         with Test::Fatal
