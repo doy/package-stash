@@ -45,39 +45,29 @@ CAN_CC
     # copied out of moose
     my $check_conflicts = <<'CHECK_CONFLICTS';
 sub check_conflicts {
-    my %conflicts = (
-        'Class::MOP'                    => '1.08',
-        'MooseX::Role::WithOverloading' => '0.08',
-        'namespace::clean'              => '0.18',
-    );
-    my $found = 0;
-    for my $mod ( sort keys %conflicts ) {
-        eval "require $mod";
-        next if $@;
-
-        my $installed = $mod->VERSION();
-        if ( $installed le $conflicts{$mod} ) {
-
-            print <<"EOF";
-
-***
-    This version of Package::Stash conflicts with the version of
-    $mod ($installed) you have installed.
-
-    You will need to upgrade $mod after installing
-    this version of Package::Stash.
-***
-
-EOF
-
-            $found = 1;
+    if (eval { require 'lib/Package/Stash/Conflicts.pm'; 1; }) {
+        if (eval { Package::Stash::Conflicts->check_conflicts; 1 }) {
+            return;
+        }
+        else {
+            my $err = $@;
+            $err =~ s/^/    /mg;
+            warn "***\n$err***\n";
         }
     }
-
-    return unless $found;
+    else {
+        print <<'EOF';
+***
+    Your toolchain doesn't support configure_requires, so Dist::CheckConflicts
+    hasn't been installed yet. You should check for conflicting modules
+    manually using the 'package-stash-conflicts' script that is installed with
+    this distribution once the installation finishes.
+***
+EOF
+    }
 
     # More or less copied from Module::Build
-    return if  $ENV{PERL_MM_USE_DEFAULT};
+    return if $ENV{PERL_MM_USE_DEFAULT};
     return unless -t STDIN && (-t STDOUT || !(-f STDOUT || -c STDOUT));
 
     sleep 4;
