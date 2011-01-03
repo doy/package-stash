@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - one more fix for the Conflicts plugin
 
 0.19  2011-01-03
       - stop manually inserting conflict checking into Makefile.PL since we're
