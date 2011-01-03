@@ -2,11 +2,11 @@ Revision history for Package-Stash
 
 {{$NEXT}}
 
-0.17  2011-01-03
+0.17-TRIAL  2011-01-03
       - use Dist::Zilla::Plugin::Conflicts rather than doing it by hand
       - silence deprecation warnings for the method renaming for now
 
-0.16  2010-12-31
+0.16-TRIAL  2010-12-31
       - use Dist::CheckConflicts
 
 0.15-TRIAL  2010-11-16
