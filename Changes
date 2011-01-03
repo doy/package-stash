@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.19  2011-01-03
       - stop manually inserting conflict checking into Makefile.PL since we're
         using the dzil Conflicts plugin now
 
