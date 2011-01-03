@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.17  2011-01-03
       - use Dist::Zilla::Plugin::Conflicts rather than doing it by hand
       - silence deprecation warnings for the method renaming for now
 
