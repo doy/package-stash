@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - non-trial release
 
 0.17-TRIAL  2011-01-03
       - use Dist::Zilla::Plugin::Conflicts rather than doing it by hand
