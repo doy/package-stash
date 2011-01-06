@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.22  2011-01-05
       - bump ::XS dep again
 
 0.21  2011-01-05
