@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Test::More;
+use Test::Fatal;
 
 use Package::Stash;
 
@@ -51,5 +52,18 @@ is(ref($constant), 'CODE', "expanded a constant into a coderef");
 # was here)
 is(ref($stash->get_symbol('$glob')), '', "nothing yet");
 is(ref($stash->get_or_add_symbol('$glob')), 'SCALAR', "got an empty scalar");
+
+my $Bar = Package::Stash->new('Bar');
+my $foo = 3;
+$foo =~ s/3/4/;
+my $bar = 4.5;
+$bar =~ s/4/5/;
+
+is(exception { $Bar->add_symbol('$foo', \$foo) }, undef,
+   "can add PVIV values");
+is(exception { $Bar->add_symbol('$bar', \$bar) }, undef,
+   "can add PVNV values");
+
+use_ok('CompileTime');
 
 done_testing;
