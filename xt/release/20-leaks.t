@@ -4,7 +4,7 @@ use warnings;
 use lib 't/lib';
 use Test::More;
 use Test::Fatal;
-use Test::Requires 'Test::LeakTrace';
+use Test::LeakTrace;
 
 use Package::Stash;
 use Symbol;
