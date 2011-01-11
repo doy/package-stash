@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.23  2011-01-11
       - lower perl prereq to 5.8.1 (ribasushi)
       - make the leak tests release-only, since they keep randomly failing on
         platforms i don't have access to. people are encouraged to submit
