@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.25  2011-01-25
       - make the leak tests author-only, since some smokers run release tests
 
 0.24  2011-01-17
