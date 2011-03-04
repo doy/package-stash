@@ -9,6 +9,9 @@ use Symbol;
 # before 5.12, assigning to the ISA glob would make it lose its magical ->isa
 # powers
 use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
+# before 5.10, stashes don't ever seem to drop to a refcount of zero, so
+# weakening them isn't helpful
+use constant BROKEN_WEAK_STASH     => ($] < 5.010);
 
 =head1 SYNOPSIS
 
@@ -38,18 +41,23 @@ sub name {
 sub namespace {
     confess "Can't call namespace as a class method"
         unless blessed($_[0]);
-    return $_[0]->{namespace} if defined $_[0]->{namespace};
 
-    {
+    if (BROKEN_WEAK_STASH) {
         no strict 'refs';
-        # supposedly this caused a bug in earlier perls, but I can't reproduce
-        # it, so re-enabling the caching
-        $_[0]->{namespace} = \%{$_[0]->name . '::'};
+        return \%{$_[0]->name . '::'};
     }
+    else {
+        return $_[0]->{namespace} if defined $_[0]->{namespace};
 
-    weaken($_[0]->{namespace});
+        {
+            no strict 'refs';
+            $_[0]->{namespace} = \%{$_[0]->name . '::'};
+        }
 
-    return $_[0]->{namespace};
+        weaken($_[0]->{namespace});
+
+        return $_[0]->{namespace};
+    }
 }
 
 {

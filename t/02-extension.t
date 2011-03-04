@@ -21,6 +21,8 @@ use Test::Fatal;
         return $self;
     }
 
+    sub namespace { shift->{namespace} }
+
     sub add_symbol {
         my ($self, $variable, $initial_value) = @_;
 
