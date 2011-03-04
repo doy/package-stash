@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - make the namespace cache lazy and weak, in case the stash is deleted
 
 0.25  2011-01-25
       - make the leak tests author-only, since some smokers run release tests
