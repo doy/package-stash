@@ -4,7 +4,7 @@ use warnings;
 # ABSTRACT: pure perl implementation of the Package::Stash API
 
 use Carp qw(confess);
-use Scalar::Util qw(blessed reftype);
+use Scalar::Util qw(blessed reftype weaken);
 use Symbol;
 # before 5.12, assigning to the ISA glob would make it lose its magical ->isa
 # powers
@@ -24,15 +24,8 @@ sub new {
     my $class = shift;
     my ($package) = @_;
     my $namespace;
-    {
-        no strict 'refs';
-        # supposedly this caused a bug in earlier perls, but I can't reproduce
-        # it, so re-enabling the caching
-        $namespace = \%{$package . '::'};
-    }
     return bless {
-        'package'   => $package,
-        'namespace' => $namespace,
+        'package' => $package,
     }, $class;
 }
 
@@ -45,6 +38,17 @@ sub name {
 sub namespace {
     confess "Can't call namespace as a class method"
         unless blessed($_[0]);
+    return $_[0]->{namespace} if defined $_[0]->{namespace};
+
+    {
+        no strict 'refs';
+        # supposedly this caused a bug in earlier perls, but I can't reproduce
+        # it, so re-enabling the caching
+        $_[0]->{namespace} = \%{$_[0]->name . '::'};
+    }
+
+    weaken($_[0]->{namespace});
+
     return $_[0]->{namespace};
 }
 
