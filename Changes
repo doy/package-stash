@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.26  2011-03-04
       - make the namespace cache lazy and weak, in case the stash is deleted
       - but, this doesn't work on 5.8, so disable the namespace caching
         entirely there
