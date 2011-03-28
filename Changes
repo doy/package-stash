@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - also skip the package-stash-conflicts script (Father Chrysostomos)
 
 0.26  2011-03-04
       - make the namespace cache lazy and weak, in case the stash is deleted
