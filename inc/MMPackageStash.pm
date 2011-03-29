@@ -44,7 +44,9 @@ CAN_CC
 
     my $template = $self->$orig(@_);
 
-    $template =~ s/(WriteMakefile\()/delete \$WriteMakefileArgs{PREREQ_PM}{'Package::Stash::XS'}\n  unless can_cc();\n\n$1/;
+    my $xs_version = $self->zilla->prereqs->requirements_for('runtime', 'recommends')->as_string_hash->{'Package::Stash::XS'};
+
+    $template =~ s/(WriteMakefile\()/\$WriteMakefileArgs{PREREQ_PM}{'Package::Stash::XS'} = $xs_version\n  if can_cc();\n\n$1/;
 
     return $template . $can_cc;
 };
