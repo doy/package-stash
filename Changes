@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - no, *really* skip the package-stash-conflict script
 
 0.28  2011-03-29
       - META.json fixes (mst)
