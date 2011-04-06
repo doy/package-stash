@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.29  2011-04-06
       - no, *really* skip the package-stash-conflict script
 
 0.28  2011-03-29
