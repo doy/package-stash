@@ -26,6 +26,17 @@ This is a backend for L<Package::Stash> implemented in pure perl, for those with
 sub new {
     my $class = shift;
     my ($package) = @_;
+
+    if (!defined($package) || (ref($package) && ref($package) ne 'HASH')) {
+        confess "Package::Stash->new must be passed the name of the "
+              . "package to access";
+    }
+    elsif (ref($package) eq 'HASH') {
+        confess "The pure perl implementation of Package::Stash doesn't "
+              . "currently support anonymous stashes. You should install "
+              . "Package::Stash::XS";
+    }
+
     return bless {
         'package' => $package,
     }, $class;
