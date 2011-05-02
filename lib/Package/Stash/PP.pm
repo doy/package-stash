@@ -134,8 +134,7 @@ sub add_symbol {
 
 sub remove_glob {
     my ($self, $name) = @_;
-    no strict 'refs';
-    delete ${$self->name . '::'}{$name};
+    delete $self->namespace->{$name};
 }
 
 sub has_symbol {
