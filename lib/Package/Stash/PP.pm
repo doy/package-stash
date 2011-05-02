@@ -26,7 +26,6 @@ This is a backend for L<Package::Stash> implemented in pure perl, for those with
 sub new {
     my $class = shift;
     my ($package) = @_;
-    my $namespace;
     return bless {
         'package' => $package,
     }, $class;
