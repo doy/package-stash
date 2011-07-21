@@ -22,7 +22,7 @@ sub can_run {
 
         for my $dir ((split /$Config::Config{path_sep}/, $ENV{PATH}), '.') {
                 next if $dir eq '';
-                my $abs = File::Spec->catfile($dir, $_[1]);
+                my $abs = File::Spec->catfile($dir, $_[0]);
                 return $abs if (-x $abs or $abs = MM->maybe_command($abs));
         }
 
