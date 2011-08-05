@@ -53,38 +53,4 @@ is(ref($constant), 'CODE', "expanded a constant into a coderef");
 is(ref($stash->get_symbol('$glob')), '', "nothing yet");
 is(ref($stash->get_or_add_symbol('$glob')), 'SCALAR', "got an empty scalar");
 
-my $Bar = Package::Stash->new('Bar');
-my $foo = 3;
-$foo =~ s/3/4/;
-my $bar = 4.5;
-$bar =~ s/4/5/;
-
-is(exception { $Bar->add_symbol('$foo', \$foo) }, undef,
-   "can add PVIV values");
-is(exception { $Bar->add_symbol('$bar', \$bar) }, undef,
-   "can add PVNV values");
-is(exception { bless \$bar, 'Foo'; $Bar->add_symbol('$bar2', $bar) }, undef,
-   "can add PVMG values");
-is(exception { $Bar->add_symbol('$baz', qr/foo/) }, undef,
-   "can add regex values");
-is(exception { undef $bar; $Bar->add_symbol('$quux', \$bar) }, undef,
-   "can add undef values that aren't NULL");
-
-use_ok('CompileTime');
-
-{
-    package Gets::Deleted;
-    sub bar { }
-}
-
-{
-    my $delete = Package::Stash->new('Gets::Deleted');
-    ok($delete->has_symbol('&bar'), "sees the method");
-    {
-        no strict 'refs';
-        delete ${'main::Gets::'}{'Deleted::'};
-    }
-    ok(!$delete->has_symbol('&bar'), "method goes away when stash is deleted");
-}
-
 done_testing;
