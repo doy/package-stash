@@ -63,6 +63,12 @@ is(exception { $Bar->add_symbol('$foo', \$foo) }, undef,
    "can add PVIV values");
 is(exception { $Bar->add_symbol('$bar', \$bar) }, undef,
    "can add PVNV values");
+is(exception { bless \$bar, 'Foo'; $Bar->add_symbol('$bar2', $bar) }, undef,
+   "can add PVMG values");
+is(exception { $Bar->add_symbol('$baz', qr/foo/) }, undef,
+   "can add regex values");
+is(exception { undef $bar; $Bar->add_symbol('$quux', \$bar) }, undef,
+   "can add undef values that aren't NULL");
 
 use_ok('CompileTime');
 
