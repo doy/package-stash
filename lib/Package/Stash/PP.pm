@@ -105,7 +105,7 @@ sub _valid_for_type {
     }
     else {
         my $ref = reftype($value);
-        return !defined($ref) || $ref eq 'SCALAR' || $ref eq 'REF' || $ref eq 'LVALUE';
+        return !defined($ref) || $ref eq 'SCALAR' || $ref eq 'REF' || $ref eq 'LVALUE' || $ref eq 'REGEXP';
     }
 }
 
