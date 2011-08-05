@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - fix ->add_symbol('$foo', qr/sdlfk/) on 5.10+
 
 0.30  2011-07-21
       - fix compiler detection in Makefile.PL (ribasushi)
