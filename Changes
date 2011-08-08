@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.31  2011-08-08
       - fix ->add_symbol('$foo', qr/sdlfk/) on 5.12+
       - fix ->add_symbol('$foo', \v1.2.3) on 5.10+
 
