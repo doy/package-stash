@@ -3,6 +3,7 @@ use strict;
 use warnings;
 # ABSTRACT: pure perl implementation of the Package::Stash API
 
+use B;
 use Carp qw(confess);
 use Scalar::Util qw(blessed reftype weaken);
 use Symbol;
@@ -12,6 +13,9 @@ use constant BROKEN_ISA_ASSIGNMENT => ($] < 5.012);
 # before 5.10, stashes don't ever seem to drop to a refcount of zero, so
 # weakening them isn't helpful
 use constant BROKEN_WEAK_STASH     => ($] < 5.010);
+# before 5.10, the scalar slot was always treated as existing if the
+# glob existed
+use constant BROKEN_SCALAR_INITIALIZATION => ($] < 5.010);
 
 =head1 SYNOPSIS
 
@@ -160,12 +164,13 @@ sub has_symbol {
 
     my $entry_ref = \$namespace->{$name};
     if (reftype($entry_ref) eq 'GLOB') {
-        # XXX: assigning to any typeglob slot also initializes the SCALAR slot,
-        # and saying that an undef scalar variable doesn't exist is probably
-        # vaguely less surprising than a scalar variable popping into existence
-        # without anyone defining it
         if ($type eq 'SCALAR') {
-            return defined ${ *{$entry_ref}{$type} };
+            if (BROKEN_SCALAR_INITIALIZATION) {
+                return defined ${ *{$entry_ref}{$type} };
+            }
+            else {
+                return B::svref_2object($entry_ref)->SV->isa('B::SV');
+            }
         }
         else {
             return defined *{$entry_ref}{$type};
@@ -269,25 +274,25 @@ sub remove_symbol {
         $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'ARRAY') {
-        $scalar = $self->get_symbol($scalar_desc);
+        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
         $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
         $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
         $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'HASH') {
-        $scalar = $self->get_symbol($scalar_desc);
+        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
         $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
         $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
         $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'CODE') {
-        $scalar = $self->get_symbol($scalar_desc);
+        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
         $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
         $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
         $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
     }
     elsif ($type eq 'IO') {
-        $scalar = $self->get_symbol($scalar_desc);
+        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
         $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
         $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
         $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
@@ -298,7 +303,7 @@ sub remove_symbol {
 
     $self->remove_glob($name);
 
-    $self->add_symbol($scalar_desc => $scalar);
+    $self->add_symbol($scalar_desc => $scalar) if defined $scalar;
     $self->add_symbol($array_desc  => $array)  if defined $array;
     $self->add_symbol($hash_desc   => $hash)   if defined $hash;
     $self->add_symbol($code_desc   => $code)   if defined $code;
@@ -324,8 +329,14 @@ sub list_all_symbols {
     }
     elsif ($type_filter eq 'SCALAR') {
         return grep {
-            ref(\$namespace->{$_}) eq 'GLOB'
-                && defined(${*{$namespace->{$_}}{'SCALAR'}})
+            BROKEN_SCALAR_INITIALIZATION
+                ? (ref(\$namespace->{$_}) eq 'GLOB'
+                      && defined(${*{$namespace->{$_}}{'SCALAR'}}))
+                : (do {
+                      my $entry = \$namespace->{$_};
+                      ref($entry) eq 'GLOB'
+                          && B::svref_2object($entry)->SV->isa('B::SV')
+                  })
         } keys %{$namespace};
     }
     else {
@@ -351,11 +362,6 @@ sub get_all_symbols {
 =head1 BUGS
 
 =over 4
-
-=item * Scalar slots are only considered to exist if they are defined
-
-This is due to a shortcoming within perl itself. See
-L<perlref/Making References> point 7 for more information.
 
 =item * remove_symbol also replaces the associated typeglob
 

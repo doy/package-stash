@@ -26,8 +26,8 @@ use Package::Stash;
 }
 
 my $stash = Package::Stash->new('Foo');
-{ local $TODO = ($] < 5.010 || $Package::Stash::IMPLEMENTATION eq 'PP')
-      ? "undef scalars aren't visible on 5.8, or from pure perl at all"
+{ local $TODO = $] < 5.010
+      ? "undef scalars aren't visible on 5.8"
       : undef;
 ok($stash->has_symbol('$SCALAR'), '$SCALAR');
 }

@@ -197,6 +197,11 @@ to the variable names (basically, a clone of the stash).
 
 =over 4
 
+=item * Prior to perl 5.10, scalar slots are only considered to exist if they are defined
+
+This is due to a shortcoming within perl itself. See
+L<perlref/Making References> point 7 for more information.
+
 =item * GLOB and FORMAT variables are not (yet) accessible through this module.
 
 =item * Also, see the BUGS section for the specific backends (L<Package::Stash::XS> and L<Package::Stash::PP>)
