@@ -61,16 +61,24 @@ use Symbol;
 
 {
     my $foo = Package::Stash->new('Foo');
+    no_leaks_ok {
+        $foo->add_symbol('$scalar_init' => 1);
+    } "add_symbol scalar doesn't leak";
+    no_leaks_ok {
+        $foo->add_symbol('@array_init' => []);
+    } "add_symbol array doesn't leak";
+    no_leaks_ok {
+        $foo->add_symbol('%hash_init' => {});
+    } "add_symbol hash doesn't leak";
+    no_leaks_ok {
+        $foo->add_symbol('&code_init' => sub { "foo" });
+    } "add_symbol code doesn't leak";
     { local $TODO = $Package::Stash::IMPLEMENTATION eq 'PP'
         ? "the pure perl implementation leaks here somehow"
         : undef;
     no_leaks_ok {
-        $foo->add_symbol('$scalar_init' => 1);
-        $foo->add_symbol('@array_init' => []);
-        $foo->add_symbol('%hash_init' => {});
-        $foo->add_symbol('&code_init' => sub { "foo" });
         $foo->add_symbol('io_init' => Symbol::geniosym);
-    } "add_symbol doesn't leak";
+    } "add_symbol io doesn't leak";
     }
     is(exception {
         is(Foo->code_init, 'foo', "sub installed correctly")
@@ -129,8 +137,8 @@ use Symbol;
         @{$foo->get_or_add_symbol('@ISA')} = @super;
         $foo->get_or_add_symbol('$glob');
     } "get_or_add_symbol doesn't leak";
-    { local $TODO = ($] < 5.010 || $Package::Stash::IMPLEMENTATION eq 'PP')
-        ? "undef scalars aren't visible on 5.8, or from pure perl at all"
+    { local $TODO = $] < 5.010
+        ? "undef scalars aren't visible on 5.8"
         : undef;
     ok($foo->has_symbol('$glob'));
     }
