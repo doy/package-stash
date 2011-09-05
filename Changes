@@ -3,6 +3,7 @@ Revision history for Package-Stash
 {{$NEXT}}
       - bring the behavior of has_symbol for nonexistant scalars into line with
         the xs version
+      - invalid package names (for instance, Foo:Bar) are not allowed
 
 0.31  2011-08-08
       - fix ->add_symbol('$foo', qr/sdlfk/) on 5.12+
