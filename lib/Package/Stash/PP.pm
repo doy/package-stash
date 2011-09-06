@@ -92,6 +92,12 @@ sub namespace {
         (defined $variable && length $variable)
             || confess "You must pass a variable name";
 
+        # XXX in pure perl, this will access things in inner packages,
+        # in xs, this will segfault - probably look more into this at
+        # some point
+        ($variable !~ /::/)
+            || confess "Variable names may not contain ::";
+
         my $sigil = substr($variable, 0, 1, '');
 
         if (exists $SIGIL_MAP{$sigil}) {
