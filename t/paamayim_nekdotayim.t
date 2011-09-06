@@ -19,5 +19,10 @@ like(
     qr/^Variable names may not contain ::/,
     "can't add symbol with ::"
 );
+like(
+    exception { $stash->get_or_add_symbol('@bar::baz') },
+    qr/^Variable names may not contain ::/,
+    "can't add symbol with ::"
+);
 
 done_testing;
