@@ -89,23 +89,31 @@ sub namespace {
     sub _deconstruct_variable_name {
         my ($self, $variable) = @_;
 
-        (defined $variable && length $variable)
-            || confess "You must pass a variable name";
+        my @ret;
+        if (ref($variable) eq 'HASH') {
+            @ret = @{$variable}{qw[name sigil type]};
+        }
+        else {
+            (defined $variable && length $variable)
+                || confess "You must pass a variable name";
+
+            my $sigil = substr($variable, 0, 1, '');
+
+            if (exists $SIGIL_MAP{$sigil}) {
+                @ret = ($variable, $sigil, $SIGIL_MAP{$sigil});
+            }
+            else {
+                @ret = ("${sigil}${variable}", '', $SIGIL_MAP{''});
+            }
+        }
 
         # XXX in pure perl, this will access things in inner packages,
         # in xs, this will segfault - probably look more into this at
         # some point
-        ($variable !~ /::/)
+        ($ret[0] !~ /::/)
             || confess "Variable names may not contain ::";
 
-        my $sigil = substr($variable, 0, 1, '');
-
-        if (exists $SIGIL_MAP{$sigil}) {
-            return ($variable, $sigil, $SIGIL_MAP{$sigil});
-        }
-        else {
-            return ("${sigil}${variable}", '', $SIGIL_MAP{''});
-        }
+        return @ret;
     }
 }
 
@@ -125,9 +133,7 @@ sub _valid_for_type {
 sub add_symbol {
     my ($self, $variable, $initial_value, %opts) = @_;
 
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
+    my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
 
     my $pkg = $self->name;
 
@@ -163,9 +169,7 @@ sub remove_glob {
 sub has_symbol {
     my ($self, $variable) = @_;
 
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
+    my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
 
     my $namespace = $self->namespace;
 
@@ -195,9 +199,7 @@ sub has_symbol {
 sub get_symbol {
     my ($self, $variable, %opts) = @_;
 
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
+    my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
 
     my $namespace = $self->namespace;
 
@@ -259,9 +261,7 @@ sub get_or_add_symbol {
 sub remove_symbol {
     my ($self, $variable) = @_;
 
-    my ($name, $sigil, $type) = ref $variable eq 'HASH'
-        ? @{$variable}{qw[name sigil type]}
-        : $self->_deconstruct_variable_name($variable);
+    my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
 
     # FIXME:
     # no doubt this is grossly inefficient and
