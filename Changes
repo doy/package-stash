@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.32  2011-09-05
       - bring the behavior of has_symbol for nonexistant scalars into line with
         the xs version
       - invalid package names (for instance, Foo:Bar) are not allowed
