@@ -40,7 +40,7 @@ sub new {
               . "currently support anonymous stashes. You should install "
               . "Package::Stash::XS";
     }
-    elsif ($package !~ /[0-9A-Z_a-z]+(?:::[0-9A-Z_a-z]+)*/) {
+    elsif ($package !~ /\A[0-9A-Z_a-z]+(?:::[0-9A-Z_a-z]+)*\z/) {
         confess "$package is not a module name";
     }
 
