@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.33  2011-09-28
       - add conflict on MooseX::Method::Signatures 0.36 (ether)
 
 0.32  2011-09-05
