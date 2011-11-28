@@ -243,8 +243,17 @@ sub get_symbol {
     }
     else {
         if ($type eq 'CODE') {
-            no strict 'refs';
-            return \&{ $self->name . '::' . $name };
+            # XXX we should really be able to support arbitrary anonymous
+            # stashes here... (not just via Package::Anon)
+            if (blessed($namespace) && $namespace->isa('Package::Anon')) {
+                # ->can will call gv_init for us
+                $namespace->bless(\(my $foo))->can($name);
+                return *{ $namespace->{$name} }{CODE};
+            }
+            else {
+                no strict 'refs';
+                return \&{ $self->name . '::' . $name };
+            }
         }
         else {
             return undef;
