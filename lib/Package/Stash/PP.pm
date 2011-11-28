@@ -135,8 +135,6 @@ sub add_symbol {
 
     my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
 
-    my $pkg = $self->name;
-
     if (@_ > 2) {
         $self->_valid_for_type($initial_value, $type)
             || confess "$initial_value is not of type $type";
@@ -152,13 +150,14 @@ sub add_symbol {
             my $last_line_num = $opts{last_line_num} || ($first_line_num ||= 0);
 
             # http://perldoc.perl.org/perldebguts.html#Debugger-Internals
-            $DB::sub{$pkg . '::' . $name} = "$filename:$first_line_num-$last_line_num";
+            $DB::sub{$self->name . '::' . $name} = "$filename:$first_line_num-$last_line_num";
         }
     }
 
-    no strict 'refs';
-    no warnings 'redefine', 'misc', 'prototype';
-    *{$pkg . '::' . $name} = ref $initial_value ? $initial_value : \$initial_value;
+    my $namespace = $self->namespace;
+    my $gv = $namespace->{$name} || Symbol::gensym;
+    *$gv = ref $initial_value ? $initial_value : \$initial_value;
+    $namespace->{$name} = *$gv;
 }
 
 sub remove_glob {
