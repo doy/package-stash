@@ -31,27 +31,31 @@ sub new {
     my $class = shift;
     my ($package) = @_;
 
-    if (!defined($package) || (ref($package) && ref($package) ne 'HASH')) {
+    if (!defined($package) || (ref($package) && reftype($package) ne 'HASH')) {
         confess "Package::Stash->new must be passed the name of the "
               . "package to access";
     }
-    elsif (ref($package) eq 'HASH') {
-        confess "The pure perl implementation of Package::Stash doesn't "
-              . "currently support anonymous stashes. You should install "
-              . "Package::Stash::XS";
+    elsif (ref($package) && reftype($package) eq 'HASH') {
+        return bless {
+            'namespace' => $package,
+        }, $class;
     }
-    elsif ($package !~ /\A[0-9A-Z_a-z]+(?:::[0-9A-Z_a-z]+)*\z/) {
+    elsif ($package =~ /\A[0-9A-Z_a-z]+(?:::[0-9A-Z_a-z]+)*\z/) {
+        return bless {
+            'package' => $package,
+        }, $class;
+    }
+    else {
         confess "$package is not a module name";
     }
 
-    return bless {
-        'package' => $package,
-    }, $class;
 }
 
 sub name {
     confess "Can't call name as a class method"
         unless blessed($_[0]);
+    confess "Can't get the name of an anonymous package"
+        unless defined($_[0]->{package});
     return $_[0]->{package};
 }
 
