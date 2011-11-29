@@ -252,6 +252,8 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
 
 {
     $foo_stash->add_symbol('%zork');
+    ok(!$foo_stash->has_symbol('$zork'),
+       "add_symbol with single argument doesn't vivify scalar slot");
 
     my $syms = $foo_stash->get_all_symbols('HASH');
 

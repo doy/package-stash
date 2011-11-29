@@ -160,8 +160,11 @@ sub add_symbol {
 
     my $namespace = $self->namespace;
     $namespace->{$name} ||= *{ Symbol::gensym() };
-    *{ $namespace->{$name} } = ref $initial_value
-        ? $initial_value : \$initial_value;
+
+    if (@_ > 2) {
+        *{ $namespace->{$name} } = ref $initial_value
+            ? $initial_value : \$initial_value;
+    }
 }
 
 sub remove_glob {
