@@ -257,6 +257,8 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
 
 {
     $foo_stash->add_symbol('%zork');
+    ok(!$foo_stash->has_symbol('$zork'),
+       "add_symbol with single argument doesn't vivify scalar slot");
 
     my $syms = $foo_stash->get_all_symbols('HASH');
 
@@ -421,5 +423,25 @@ like(exception {
         "list_all_symbols CODE",
     );
 }
+
+for my $package ('Foo:Bar', 'Foo/Bar', 'Foo Bar', 'Foo:::Bar', '') {
+    like(
+        exception { Package::Stash->new($package) },
+        qr/^$package is not a module name/,
+        "$package is not a module name"
+    );
+}
+
+like(
+    exception { Package::Stash->new([]) },
+    qr/^Package::Stash->new must be passed the name of the package to access/,
+    "module name must be a string"
+);
+
+like(
+    exception { Package::Stash->new(undef) },
+    qr/^Package::Stash->new must be passed the name of the package to access/,
+    "module name must be a string"
+);
 
 done_testing;
