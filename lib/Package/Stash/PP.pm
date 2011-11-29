@@ -159,9 +159,9 @@ sub add_symbol {
     }
 
     my $namespace = $self->namespace;
-    my $gv = $namespace->{$name} || Symbol::gensym;
-    *$gv = ref $initial_value ? $initial_value : \$initial_value;
-    $namespace->{$name} = *$gv;
+    $namespace->{$name} ||= *{ Symbol::gensym() };
+    *{ $namespace->{$name} } = ref $initial_value
+        ? $initial_value : \$initial_value;
 }
 
 sub remove_glob {
