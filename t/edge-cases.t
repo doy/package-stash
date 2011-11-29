@@ -53,4 +53,30 @@ is(ref($constant), 'CODE', "expanded a constant into a coderef");
 is(ref($stash->get_symbol('$glob')), '', "nothing yet");
 is(ref($stash->get_or_add_symbol('$glob')), 'SCALAR', "got an empty scalar");
 
+SKIP: {
+    skip "PP doesn't support anon stashes before 5.14", 4
+        if $Package::Stash::IMPLEMENTATION eq 'PP'
+        && Package::Stash::BROKEN_GLOB_ASSIGNMENT;
+    local $TODO = "don't know how to properly inflate a stash entry";
+
+    my $anon = {}; # not using Package::Anon
+    $anon->{foo} = -1;     # stub
+    $anon->{bar} = '$&';   # stub with prototype
+    $anon->{baz} = \"foo"; # constant
+
+    my $stash = Package::Stash->new($anon);
+    is(
+        exception {
+            is(ref($stash->get_symbol('&foo')), 'CODE',
+               "stub expanded into a glob");
+            is(ref($stash->get_symbol('&bar')), 'CODE',
+               "stub with prototype expanded into a glob");
+            is(ref($stash->get_symbol('&baz')), 'CODE',
+               "constant expanded into a glob");
+        },
+        undef,
+        "can call get_symbol on weird stash entries"
+    );
+}
+
 done_testing;

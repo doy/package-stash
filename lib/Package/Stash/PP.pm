@@ -88,6 +88,10 @@ sub namespace {
     }
 }
 
+sub _is_anon {
+    return !defined $_[0]->{package};
+}
+
 {
     my %SIGIL_MAP = (
         '$' => 'SCALAR',
@@ -270,19 +274,25 @@ sub get_symbol {
     }
     else {
         if ($type eq 'CODE') {
-            # XXX we should really be able to support arbitrary anonymous
-            # stashes here... (not just via Package::Anon)
-            if (!BROKEN_GLOB_ASSIGNMENT
-                && blessed($namespace)
-                && $namespace->isa('Package::Anon')) {
-                # ->can will call gv_init for us
-                $namespace->bless(\(my $foo))->can($name);
-                return *{ $namespace->{$name} }{CODE};
-            }
-            else {
+            if (BROKEN_GLOB_ASSIGNMENT || !$self->_is_anon) {
                 no strict 'refs';
                 return \&{ $self->name . '::' . $name };
             }
+
+            # XXX we should really be able to support arbitrary anonymous
+            # stashes here... (not just via Package::Anon)
+            if (blessed($namespace) && $namespace->isa('Package::Anon')) {
+                # ->can will call gv_init for us, which inflates the glob
+                # don't know how to do this in general
+                $namespace->bless(\(my $foo))->can($name);
+            }
+            else {
+                confess "Don't know how to inflate a " . ref($entry_ref)
+                      . " into a full coderef (perhaps you could use"
+                      . " Package::Anon instead of a bare stash?)"
+            }
+
+            return *{ $namespace->{$name} }{CODE};
         }
         else {
             return undef;
