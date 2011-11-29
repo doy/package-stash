@@ -255,9 +255,13 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
 }
 
 {
-    $foo_stash->add_symbol('%zork');
-    ok(!$foo_stash->has_symbol('$zork'),
+    $foo_stash->add_symbol('%bare');
+    ok(!$foo_stash->has_symbol('$bare'),
        "add_symbol with single argument doesn't vivify scalar slot");
+}
+
+{
+    $foo_stash->add_symbol('%zork', {});
 
     my $syms = $foo_stash->get_all_symbols('HASH');
 
@@ -271,10 +275,9 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
         is($syms->{$symbol}, $foo_stash->get_symbol('%' . $symbol), '... got the right symbol');
     }
 
-    no warnings 'once';
     is_deeply(
         $syms,
-        { zork => \%Foo::zork },
+        { zork => *{ $Foo::{zork} }{HASH} },
         "got the right ones",
     );
 }
