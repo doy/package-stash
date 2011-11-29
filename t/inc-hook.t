@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Fatal;
+use lib 't/lib';
 
 unshift @INC, sub { "some regex" =~ /match/; undef };
 
