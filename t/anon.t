@@ -10,6 +10,9 @@ use Test::Requires 'Package::Anon';
 use Package::Stash;
 use Symbol;
 
+plan skip_all => "Anonymous stashes in PP need at least perl 5.14"
+    if Package::Stash::BROKEN_GLOB_ASSIGNMENT;
+
 my $anon = Package::Anon->new;
 my $stash = Package::Stash->new($anon);
 my $obj = $anon->bless({});

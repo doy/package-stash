@@ -9,6 +9,9 @@ use Test::Requires 'Package::Anon';
 use Package::Stash;
 use Symbol;
 
+plan skip_all => "Anonymous stashes in PP need at least perl 5.14"
+    if Package::Stash::BROKEN_GLOB_ASSIGNMENT;
+
 my $Foo = Package::Anon->new('Foo');
 $Foo->{SOME_CONSTANT} = \1;
 

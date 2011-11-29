@@ -16,6 +16,9 @@ use constant BROKEN_WEAK_STASH     => ($] < 5.010);
 # before 5.10, the scalar slot was always treated as existing if the
 # glob existed
 use constant BROKEN_SCALAR_INITIALIZATION => ($] < 5.010);
+# add_method on anon stashes triggers rt.perl #1804 otherwise
+# fixed in perl commit v5.13.3-70-g0fe688f
+use constant BROKEN_GLOB_ASSIGNMENT => ($] < 5.013004);
 
 =head1 SYNOPSIS
 
@@ -36,6 +39,10 @@ sub new {
               . "package to access";
     }
     elsif (ref($package) && reftype($package) eq 'HASH') {
+        confess "The PP implementation of Package::Stash does not support "
+              . "anonymous stashes before perl 5.14"
+            if BROKEN_GLOB_ASSIGNMENT;
+
         return bless {
             'namespace' => $package,
         }, $class;
@@ -158,12 +165,25 @@ sub add_symbol {
         }
     }
 
-    my $namespace = $self->namespace;
-    $namespace->{$name} ||= *{ Symbol::gensym() };
+    if (BROKEN_GLOB_ASSIGNMENT) {
+        if (@_ > 2) {
+            no strict 'refs';
+            *{ $self->name . '::' . $name } = ref $initial_value
+                ? $initial_value : \$initial_value;
+        }
+        else {
+            no strict 'refs';
+            *{ $self->name . '::' . $name };
+        }
+    }
+    else {
+        my $namespace = $self->namespace;
+        $namespace->{$name} ||= *{ Symbol::gensym() };
 
-    if (@_ > 2) {
-        *{ $namespace->{$name} } = ref $initial_value
-            ? $initial_value : \$initial_value;
+        if (@_ > 2) {
+            *{ $namespace->{$name} } = ref $initial_value
+                ? $initial_value : \$initial_value;
+        }
     }
 }
 
@@ -252,7 +272,9 @@ sub get_symbol {
         if ($type eq 'CODE') {
             # XXX we should really be able to support arbitrary anonymous
             # stashes here... (not just via Package::Anon)
-            if (blessed($namespace) && $namespace->isa('Package::Anon')) {
+            if (!BROKEN_GLOB_ASSIGNMENT
+                && blessed($namespace)
+                && $namespace->isa('Package::Anon')) {
                 # ->can will call gv_init for us
                 $namespace->bless(\(my $foo))->can($name);
                 return *{ $namespace->{$name} }{CODE};
