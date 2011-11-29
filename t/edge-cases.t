@@ -57,7 +57,9 @@ SKIP: {
     skip "PP doesn't support anon stashes before 5.14", 4
         if $Package::Stash::IMPLEMENTATION eq 'PP'
         && Package::Stash::BROKEN_GLOB_ASSIGNMENT;
-    local $TODO = "don't know how to properly inflate a stash entry";
+    local $TODO = ($Package::Stash::IMPLEMENTATION eq 'PP')
+        ? "don't know how to properly inflate a stash entry"
+        : undef;
 
     my $anon = {}; # not using Package::Anon
     $anon->{foo} = -1;     # stub
