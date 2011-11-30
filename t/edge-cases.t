@@ -80,4 +80,13 @@ SKIP: {
     );
 }
 
+{
+    my $warning;
+    local $SIG{__WARN__} = sub { $warning = $_[0] };
+    my $stash = Package::Stash->new('Bar');
+    $stash->add_symbol('&foo' => sub { });
+    $stash->add_symbol('&foo' => sub { });
+    is($warning, undef, "no redefinition warnings");
+}
+
 done_testing;

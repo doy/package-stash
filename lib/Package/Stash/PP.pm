@@ -185,6 +185,7 @@ sub add_symbol {
         $namespace->{$name} ||= *{ Symbol::gensym() };
 
         if (@_ > 2) {
+            no warnings 'redefine';
             *{ $namespace->{$name} } = ref $initial_value
                 ? $initial_value : \$initial_value;
         }
