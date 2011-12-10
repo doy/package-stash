@@ -212,9 +212,7 @@ ok(defined(*{ $Foo->{foo} }{ARRAY}), '... the @foo slot has NOT been removed');
 }
 
 {
-    local $TODO = ($Package::Stash::IMPLEMENTATION eq 'PP')
-        ? "can't inflate weird stash entries"
-        : undef;
+    local $TODO = "can't inflate weird stash entries";
 
     is(
         exception {
