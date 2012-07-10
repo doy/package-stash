@@ -272,13 +272,17 @@ like(exception {
 is_deeply([Package::Stash->new('Foo')->list_all_symbols], [],
           "Foo:: isn't touched");
 
+# *{ $Quux->{foo} } = \23 doesn't work on 5.12 and lower, apparently
 my $Quux = Package::Anon->new('Quux');
-$Quux->{foo} = *{ Symbol::gensym() };
-*{ $Quux->{foo} } = \23;
-*{ $Quux->{foo} } = ["bar"];
-*{ $Quux->{foo} } = { baz => 1 };
-*{ $Quux->{foo} } = sub { };
-*{ $Quux->{foo} } = *{ Symbol::geniosym() }{IO};
+{
+    my $gv = Symbol::gensym;
+    *$gv = \23;
+    *$gv = ["bar"];
+    *$gv = { baz => 1 };
+    *$gv = sub { };
+    *$gv = *{ Symbol::geniosym() }{IO};
+    $Quux->{foo} = *$gv;
+}
 
 {
     my $stash = Package::Stash->new($Quux);
@@ -329,16 +333,25 @@ is_deeply([Package::Stash->new('Quux')->list_all_symbols], [],
 
 my $Quuux = Package::Anon->new('Quuux');
 
-$Quuux->{foo} = *{ Symbol::gensym() };
-*{ $Quuux->{foo} } = \(my $scalar);
-*{ $Quuux->{foo} } = [];
+{
+    my $gv = Symbol::gensym;
+    *$gv = \(my $scalar);
+    *$gv = [];
+    $Quuux->{foo} = *$gv;
+}
 
-$Quuux->{bar} = *{ Symbol::gensym() };
-*{ $Quuux->{bar} } = [];
+{
+    my $gv = Symbol::gensym;
+    *$gv = [];
+    $Quuux->{bar} = *$gv;
+}
 
-$Quuux->{baz} = *{ Symbol::gensym() };
-*{ $Quuux->{baz} } = {};
-*{ $Quuux->{baz} } = sub { };
+{
+    my $gv = Symbol::gensym;
+    *$gv = {};
+    *$gv = sub { };
+    $Quuux->{baz} = *$gv;
+}
 
 $Quuux->{quux} = \1;
 
