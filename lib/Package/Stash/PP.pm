@@ -172,6 +172,7 @@ sub add_symbol {
     if (BROKEN_GLOB_ASSIGNMENT) {
         if (@_ > 2) {
             no strict 'refs';
+            no warnings 'redefine';
             *{ $self->name . '::' . $name } = ref $initial_value
                 ? $initial_value : \$initial_value;
         }
