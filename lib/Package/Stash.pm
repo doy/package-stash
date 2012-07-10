@@ -1,6 +1,7 @@
 package Package::Stash;
 use strict;
 use warnings;
+use 5.008001;
 # ABSTRACT: routines for manipulating stashes
 
 our $IMPLEMENTATION;
