@@ -182,7 +182,15 @@ sub add_symbol {
     }
     else {
         my $namespace = $self->namespace;
-        $namespace->{$name} ||= *{ Symbol::gensym() };
+        {
+            # using glob aliasing instead of Symbol::gensym, because otherwise,
+            # magic doesn't get applied properly.
+            # see <20120710063744.19360.qmail@lists-nntp.develooper.com> on p5p
+            local *__ANON__:: = $namespace;
+            no strict 'refs';
+            no warnings 'void';
+            *{"__ANON__::$name"};
+        }
 
         if (@_ > 2) {
             no warnings 'redefine';
