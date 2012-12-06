@@ -12,7 +12,9 @@ BEGIN {
 
     my $err;
     if ($IMPLEMENTATION) {
-        if (!eval "require Package::Stash::$IMPLEMENTATION; 1") {
+        my $file = "Package::Stash::$IMPLEMENTATION.pm";
+        $file =~ s{::}{/}g;
+        if (!eval 'require($file) ; 1') {
             require Carp;
             Carp::croak("Could not load Package::Stash::$IMPLEMENTATION: $@");
         }
