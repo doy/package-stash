@@ -26,4 +26,14 @@ SKIP: {
     can_ok('Package::Stash', 'new');
 }
 
+{
+    delete $Package::{'Stash::'};
+    delete $INC{'Package/Stash.pm'};
+    set_impl('INVALID');
+    $ENV{PACKAGE_STASH_IMPLEMENTATION} = 'PP';
+    require Package::Stash;
+    is(get_impl, 'PP', '$ENV takes precedence over $Package::Stash::IMPLEMENTATION');
+    can_ok('Package::Stash', 'new');
+}
+
 done_testing;

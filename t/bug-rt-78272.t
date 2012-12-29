@@ -10,7 +10,7 @@ subtest 'Bug RT-78272: Arbitrary code execution from $ENV' => sub {
 
     like(
         exception { require Package::Stash },
-        qr/^Could not load Package::Stash::$e/,
+        qr/$e is not a valid implementation for Package::Stash/,
         'Arbitrary code in $ENV throws exception'
     );
 
@@ -19,7 +19,7 @@ subtest 'Bug RT-78272: Arbitrary code execution from $ENV' => sub {
             delete $INC{'Package/Stash.pm'};
             require Package::Stash;
         },
-        qr/^Could not load Package::Stash::$e/,
+        qr/$e is not a valid implementation for Package::Stash/,
         'Sanity check: forcing package reload throws the exception again'
     );
 
