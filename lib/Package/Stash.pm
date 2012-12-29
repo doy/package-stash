@@ -6,35 +6,16 @@ use 5.008001;
 
 our $IMPLEMENTATION;
 
+use Module::Implementation;
+
 BEGIN {
-    $IMPLEMENTATION = $ENV{PACKAGE_STASH_IMPLEMENTATION}
-        if exists $ENV{PACKAGE_STASH_IMPLEMENTATION};
+    local $ENV{PACKAGE_STASH_IMPLEMENTATION} = $IMPLEMENTATION
+      if ( $IMPLEMENTATION and not $ENV{PACKAGE_STASH_IMPLEMENTATION} );
 
-    my $err;
-    if ($IMPLEMENTATION) {
-        my $file = "Package::Stash::$IMPLEMENTATION.pm";
-        $file =~ s{::}{/}g;
-        if (!eval 'require($file) ; 1') {
-            require Carp;
-            Carp::croak("Could not load Package::Stash::$IMPLEMENTATION: $@");
-        }
-    }
-    else {
-        for my $impl ('XS', 'PP') {
-            if (eval "require Package::Stash::$impl; 1;") {
-                $IMPLEMENTATION = $impl;
-                last;
-            }
-            else {
-                $err .= $@;
-            }
-        }
-    }
-
-    if (!$IMPLEMENTATION) {
-        require Carp;
-        Carp::croak("Could not find a suitable Package::Stash implementation: $err");
-    }
+    Module::Implementation::build_loader_sub(
+        implementations => [ 'XS', 'PP' ]
+    )->();
+    $IMPLEMENTATION = Module::Implementation::implementation_for(__PACKAGE__);
 
     my $impl = "Package::Stash::$IMPLEMENTATION";
     my $from = $impl->new($impl);
