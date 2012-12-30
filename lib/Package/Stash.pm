@@ -6,7 +6,7 @@ use 5.008001;
 
 our $IMPLEMENTATION;
 
-use Module::Implementation;
+use Module::Implementation 0.06;
 
 BEGIN {
     local $ENV{PACKAGE_STASH_IMPLEMENTATION} = $IMPLEMENTATION
