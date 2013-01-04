@@ -1,6 +1,10 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - support anonymous stashes on newer perl versions
+      - prevent harmful effects from invalid settings for
+        $ENV{PACKAGE_STASH_IMPLEMENTATION}
+      - switch to Module::Implementation
 
 0.33  2011-09-28
       - add conflict on MooseX::Method::Signatures 0.36 (ether)
