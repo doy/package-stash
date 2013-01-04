@@ -98,7 +98,7 @@ use Symbol;
 
 {
     my $foo = Package::Stash->new('Foo');
-    $foo->add_symbol("${_}glob") for ('$', '@', '%', '&', '');
+    $foo->add_symbol("${_}glob") for ('$', '@', '%', '');
     no_leaks_ok {
         $foo->remove_glob('glob');
     } "remove_glob doesn't leak";
