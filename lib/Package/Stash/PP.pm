@@ -178,7 +178,13 @@ sub add_symbol {
         }
         else {
             no strict 'refs';
-            *{ $self->name . '::' . $name } = $self->_undef_ref_for_type($type);
+            if (BROKEN_ISA_ASSIGNMENT && $name eq 'ISA') {
+                *{ $self->name . '::' . $name };
+            }
+            else {
+                my $undef = $self->_undef_ref_for_type($type);
+                *{ $self->name . '::' . $name } = $undef;
+            }
         }
     }
     else {
