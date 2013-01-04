@@ -56,7 +56,10 @@ is(ref($stash->get_or_add_symbol('$glob')), 'SCALAR', "got an empty scalar");
 SKIP: {
     skip "PP doesn't support anon stashes before 5.14", 4
         if $] < 5.014 && $Package::Stash::IMPLEMENTATION eq 'PP';
-    local $TODO = "don't know how to properly inflate a stash entry";
+    skip "XS doesn't support anon stashes before 5.10", 4
+        if $] < 5.010 && $Package::Stash::IMPLEMENTATION eq 'XS';
+    local $TODO = "don't know how to properly inflate a stash entry in PP"
+        if $Package::Stash::IMPLEMENTATION eq 'PP';
 
     my $anon = {}; # not using Package::Anon
     $anon->{foo} = -1;     # stub
@@ -88,9 +91,12 @@ SKIP: {
 }
 
 {
+    local $TODO = $] < 5.010
+        ? "undef scalars aren't visible on 5.8"
+        : undef;
     my $stash = Package::Stash->new('Baz');
     $stash->add_symbol('$baz', \undef);
-    ok($stash->has_symbol('$baz'));
+    ok($stash->has_symbol('$baz'), "immortal scalars are also visible");
 }
 
 done_testing;
