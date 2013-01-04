@@ -99,4 +99,15 @@ SKIP: {
     ok($stash->has_symbol('$baz'), "immortal scalars are also visible");
 }
 
+{
+    {
+        package HasISA::Super;
+        package HasISA;
+        our @ISA = ('HasISA::Super');
+    }
+    ok(HasISA->isa('HasISA::Super'));
+    my $stash = Package::Stash->new('HasISA');
+    is_deeply([$stash->list_all_symbols('SCALAR')], []);
+}
+
 done_testing;

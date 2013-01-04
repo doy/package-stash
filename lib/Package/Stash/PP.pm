@@ -19,6 +19,8 @@ use constant BROKEN_SCALAR_INITIALIZATION => ($] < 5.010);
 # add_method on anon stashes triggers rt.perl #1804 otherwise
 # fixed in perl commit v5.13.3-70-g0fe688f
 use constant BROKEN_GLOB_ASSIGNMENT => ($] < 5.013004);
+# pre-5.10, ->isa lookups were cached in the ::ISA::CACHE:: slot
+use constant HAS_ISA_CACHE => ($] < 5.010);
 
 =head1 SYNOPSIS
 
@@ -364,7 +366,14 @@ sub list_all_symbols {
     my ($self, $type_filter) = @_;
 
     my $namespace = $self->namespace;
-    return keys %{$namespace} unless defined $type_filter;
+    if (HAS_ISA_CACHE) {
+        return grep { $_ ne '::ISA::CACHE::' } keys %{$namespace}
+            unless defined $type_filter;
+    }
+    else {
+        return keys %{$namespace}
+            unless defined $type_filter;
+    }
 
     # NOTE:
     # or we can filter based on
@@ -379,14 +388,15 @@ sub list_all_symbols {
     }
     elsif ($type_filter eq 'SCALAR') {
         return grep {
-            BROKEN_SCALAR_INITIALIZATION
+            !(HAS_ISA_CACHE && $_ eq '::ISA::CACHE::') &&
+            (BROKEN_SCALAR_INITIALIZATION
                 ? (ref(\$namespace->{$_}) eq 'GLOB'
                       && defined(${*{$namespace->{$_}}{'SCALAR'}}))
                 : (do {
                       my $entry = \$namespace->{$_};
                       ref($entry) eq 'GLOB'
                           && B::svref_2object($entry)->SV->isa('B::SV')
-                  })
+                  }))
         } keys %{$namespace};
     }
     else {
