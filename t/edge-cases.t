@@ -87,4 +87,10 @@ SKIP: {
     is($warning, undef, "no redefinition warnings");
 }
 
+{
+    my $stash = Package::Stash->new('Baz');
+    $stash->add_symbol('$baz', \undef);
+    ok($stash->has_symbol('$baz'));
+}
+
 done_testing;

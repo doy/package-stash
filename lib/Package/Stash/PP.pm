@@ -250,7 +250,10 @@ sub has_symbol {
                 return defined ${ *{$entry_ref}{$type} };
             }
             else {
-                return B::svref_2object($entry_ref)->SV->isa('B::SV');
+                my $sv = B::svref_2object($entry_ref)->SV;
+                return $sv->isa('B::SV')
+                    || ($sv->isa('B::SPECIAL')
+                     && $B::specialsv_name[$$sv] ne 'Nullsv');
             }
         }
         else {
