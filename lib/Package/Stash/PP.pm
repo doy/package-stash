@@ -178,7 +178,7 @@ sub add_symbol {
         }
         else {
             no strict 'refs';
-            *{ $self->name . '::' . $name };
+            *{ $self->name . '::' . $name } = $self->_undef_ref_for_type($type);
         }
     }
     else {
