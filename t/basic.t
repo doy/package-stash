@@ -273,7 +273,10 @@ is($foo_stash->get_symbol('@foo'), $ARRAY, '... got the right values for @Foo::f
 
     is_deeply(
         $syms,
-        { zork => *{ $Foo::{zork} }{HASH} },
+        {
+            zork => *{ $Foo::{zork} }{HASH},
+            bare => *{ $Foo::{bare} }{HASH},
+        },
         "got the right ones",
     );
 }

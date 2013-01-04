@@ -255,7 +255,10 @@ ok(defined(*{ $Foo->{foo} }{ARRAY}), '... the @foo slot has NOT been removed');
 
     is_deeply(
         $syms,
-        { zork => *{ $Foo->{zork} }{HASH} },
+        {
+            zork => *{ $Foo->{zork} }{HASH},
+            bare => *{ $Foo->{bare} }{HASH},
+        },
         "got the right ones",
     );
 }
