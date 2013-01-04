@@ -322,64 +322,28 @@ sub get_or_add_symbol {
 }
 
 sub remove_symbol {
-    my ($self, $variable) = @_;
+    my ( $self, $variable ) = @_;
 
-    my ($name, $sigil, $type) = $self->_deconstruct_variable_name($variable);
+    my ( $name, $sigil, $type ) = $self->_deconstruct_variable_name( $variable );
 
-    # FIXME:
-    # no doubt this is grossly inefficient and
-    # could be done much easier and faster in XS
-
-    my ($scalar_desc, $array_desc, $hash_desc, $code_desc, $io_desc) = (
-        { sigil => '$', type => 'SCALAR', name => $name },
-        { sigil => '@', type => 'ARRAY',  name => $name },
-        { sigil => '%', type => 'HASH',   name => $name },
-        { sigil => '&', type => 'CODE',   name => $name },
-        { sigil => '',  type => 'IO',     name => $name },
+    my %desc = (
+        SCALAR => { sigil => '$', type => 'SCALAR', name => $name },
+        ARRAY  => { sigil => '@', type => 'ARRAY',  name => $name },
+        HASH   => { sigil => '%', type => 'HASH',   name => $name },
+        CODE   => { sigil => '&', type => 'CODE',   name => $name },
+        IO     => { sigil => '',  type => 'IO',     name => $name },
     );
+    confess "This should never ever ever happen" if !$desc{$type};
 
-    my ($scalar, $array, $hash, $code, $io);
-    if ($type eq 'SCALAR') {
-        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
-        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
-        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
-        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
-    }
-    elsif ($type eq 'ARRAY') {
-        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
-        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
-        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
-        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
-    }
-    elsif ($type eq 'HASH') {
-        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
-        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
-        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
-        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
-    }
-    elsif ($type eq 'CODE') {
-        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
-        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
-        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
-        $io     = $self->get_symbol($io_desc)     if $self->has_symbol($io_desc);
-    }
-    elsif ($type eq 'IO') {
-        $scalar = $self->get_symbol($scalar_desc) if $self->has_symbol($scalar_desc) || BROKEN_SCALAR_INITIALIZATION;
-        $array  = $self->get_symbol($array_desc)  if $self->has_symbol($array_desc);
-        $hash   = $self->get_symbol($hash_desc)   if $self->has_symbol($hash_desc);
-        $code   = $self->get_symbol($code_desc)   if $self->has_symbol($code_desc);
-    }
-    else {
-        confess "This should never ever ever happen";
-    }
+    my @types_to_store = grep { $type ne $_ && $self->has_symbol( $desc{$_} ) } keys %desc;
+    my %values = map { $_, $self->get_symbol( $desc{$_} ) } @types_to_store;
 
-    $self->remove_glob($name);
+    $values{SCALAR} = $self->get_symbol( $desc{SCALAR} )
+      if !defined $values{SCALAR} && $type ne 'SCALAR' && BROKEN_SCALAR_INITIALIZATION;
 
-    $self->add_symbol($scalar_desc => $scalar) if defined $scalar;
-    $self->add_symbol($array_desc  => $array)  if defined $array;
-    $self->add_symbol($hash_desc   => $hash)   if defined $hash;
-    $self->add_symbol($code_desc   => $code)   if defined $code;
-    $self->add_symbol($io_desc     => $io)     if defined $io;
+    $self->remove_glob( $name );
+
+    $self->add_symbol( $desc{$_} => $values{$_} ) for grep { defined $values{$_} } keys %values;
 }
 
 sub list_all_symbols {
