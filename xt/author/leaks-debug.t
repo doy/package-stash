@@ -73,13 +73,9 @@ use Symbol;
     no_leaks_ok {
         $foo->add_symbol('&code_init' => sub { "foo" });
     } "add_symbol code doesn't leak";
-    { local $TODO = $Package::Stash::IMPLEMENTATION eq 'PP'
-        ? "the pure perl implementation leaks here somehow"
-        : undef;
     no_leaks_ok {
         $foo->add_symbol('io_init' => Symbol::geniosym);
     } "add_symbol io doesn't leak";
-    }
     is(exception {
         is(Foo->code_init, 'foo', "sub installed correctly")
     }, undef, "code_init exists");
@@ -191,10 +187,6 @@ use Symbol;
 }
 
 {
-    local $TODO = ($Package::Stash::IMPLEMENTATION eq 'PP'
-                && $Carp::VERSION ge '1.17')
-        ? "Carp is leaky on 5.12.2 apparently?"
-        : undef;
     my $foo = Package::Stash->new('Foo');
     no_leaks_ok {
         eval { $foo->get_or_add_symbol('&blorg') };
