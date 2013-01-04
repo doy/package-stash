@@ -198,6 +198,34 @@ sub add_symbol {
             *{ $namespace->{$name} } = ref $initial_value
                 ? $initial_value : \$initial_value;
         }
+        else {
+            return if BROKEN_ISA_ASSIGNMENT && $name eq 'ISA';
+            *{ $namespace->{$name} } = $self->_undef_ref_for_type($type);
+        }
+    }
+}
+
+sub _undef_ref_for_type {
+    my $self = shift;
+    my ($type) = @_;
+
+    if ($type eq 'ARRAY') {
+        return [];
+    }
+    elsif ($type eq 'HASH') {
+        return {};
+    }
+    elsif ($type eq 'SCALAR') {
+        return \undef;
+    }
+    elsif ($type eq 'IO') {
+        return Symbol::geniosym;
+    }
+    elsif ($type eq 'CODE') {
+        confess "Don't know how to vivify CODE variables";
+    }
+    else {
+        confess "Unknown type $type in vivication";
     }
 }
 
@@ -245,32 +273,7 @@ sub get_symbol {
 
     if (!exists $namespace->{$name}) {
         if ($opts{vivify}) {
-            if ($type eq 'ARRAY') {
-                if (BROKEN_ISA_ASSIGNMENT) {
-                    $self->add_symbol(
-                        $variable,
-                        $name eq 'ISA' ? () : ([])
-                    );
-                }
-                else {
-                    $self->add_symbol($variable, []);
-                }
-            }
-            elsif ($type eq 'HASH') {
-                $self->add_symbol($variable, {});
-            }
-            elsif ($type eq 'SCALAR') {
-                $self->add_symbol($variable);
-            }
-            elsif ($type eq 'IO') {
-                $self->add_symbol($variable, Symbol::geniosym);
-            }
-            elsif ($type eq 'CODE') {
-                confess "Don't know how to vivify CODE variables";
-            }
-            else {
-                confess "Unknown type $type in vivication";
-            }
+            $self->add_symbol($variable);
         }
         else {
             return undef;
