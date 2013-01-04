@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.34  2013-01-04
       - support anonymous stashes on newer perl versions
       - prevent harmful effects from invalid settings for
         $ENV{PACKAGE_STASH_IMPLEMENTATION}
