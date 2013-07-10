@@ -1,6 +1,8 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+
+0.35  2013-07-09
       - remove old deprecated api
 
 0.34  2013-01-04
