@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - remove old deprecated api
 
 0.34  2013-01-04
       - support anonymous stashes on newer perl versions
