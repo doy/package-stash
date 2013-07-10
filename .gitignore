@@ -1,5 +1,6 @@
 cover_db
-META.yml
+META.*
+MYMETA.*
 Makefile
 blib
 pm_to_blib
@@ -8,5 +9,8 @@ Makefile.old
 nytprof.out
 MANIFEST.bak
 *.sw[po]
+.DS_Store
 .build
 Package-Stash-*
+*.bs
+*.o
