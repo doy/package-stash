@@ -215,27 +215,25 @@ You can also look for information at:
 
 =over 4
 
-=item * AnnoCPAN: Annotated CPAN documentation
+=item * MetaCPAN
 
-L<http://annocpan.org/dist/Package-Stash>
+L<https://metacpan.org/release/Package-Stash>
 
-=item * CPAN Ratings
+=item * Github
 
-L<http://cpanratings.perl.org/d/Package-Stash>
+L<https://github.com/doy/package-stash>
 
 =item * RT: CPAN's request tracker
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Package-Stash>
 
-=item * Search CPAN
+=item * CPAN Ratings
 
-L<http://search.cpan.org/dist/Package-Stash>
+L<http://cpanratings.perl.org/d/Package-Stash>
 
 =back
 
-=head1 AUTHOR
-
-Jesse Luehrs <doy at tozt dot net>
+=head1 HISTORY
 
 Based on code from L<Class::MOP::Package>, by Stevan Little and the Moose
 Cabal.
