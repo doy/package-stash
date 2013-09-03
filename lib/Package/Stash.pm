@@ -13,17 +13,22 @@ BEGIN {
       if ( $IMPLEMENTATION and not $ENV{PACKAGE_STASH_IMPLEMENTATION} );
 
     Module::Implementation::build_loader_sub(
-        implementations => [ 'XS', 'PP' ]
+        implementations => [ 'XS', 'PP' ],
+        symbols         => [qw(
+            new
+            name
+            namespace
+            add_symbol
+            remove_glob
+            has_symbol
+            get_symbol
+            get_or_add_symbol
+            remove_symbol
+            list_all_symbols
+            get_all_symbols
+        )],
     )->();
     $IMPLEMENTATION = Module::Implementation::implementation_for(__PACKAGE__);
-
-    my $impl = "Package::Stash::$IMPLEMENTATION";
-    my $from = $impl->new($impl);
-    my $to = $impl->new(__PACKAGE__);
-    my $methods = $from->get_all_symbols('CODE');
-    for my $meth (keys %$methods) {
-        $to->add_symbol("&$meth" => $methods->{$meth});
-    }
 }
 
 =head1 SYNOPSIS
