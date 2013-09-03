@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - support building with PUREPERL_ONLY
 
 0.35  2013-07-09
       - remove old deprecated api
