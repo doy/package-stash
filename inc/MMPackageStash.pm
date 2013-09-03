@@ -8,6 +8,8 @@ around _build_MakeFile_PL_template => sub {
     my $orig = shift;
     my $self = shift;
 
+    my $xs_version = $self->zilla->prereqs->requirements_for('runtime', 'recommends')->as_string_hash->{'Package::Stash::XS'};
+
     # copied from M::I
     my $can_cc = <<'CAN_CC';
 use Config ();
@@ -42,13 +44,16 @@ sub can_cc {
 }
 CAN_CC
 
+    my $fixup_prereqs = <<PREREQS;
+\$WriteMakefileArgs{PREREQ_PM}{'Package::Stash::XS'} = $xs_version
+    if can_cc();
+PREREQS
+
     my $template = $self->$orig(@_);
+    $template =~ s/(WriteMakefile\()/$fixup_prereqs\n$1/;
+    $template .= $can_cc;
 
-    my $xs_version = $self->zilla->prereqs->requirements_for('runtime', 'recommends')->as_string_hash->{'Package::Stash::XS'};
-
-    $template =~ s/(WriteMakefile\()/\$WriteMakefileArgs{PREREQ_PM}{'Package::Stash::XS'} = $xs_version\n  if can_cc();\n\n$1/;
-
-    return $template . $can_cc;
+    return $template;
 };
 
 __PACKAGE__->meta->make_immutable;
