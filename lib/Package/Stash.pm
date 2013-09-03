@@ -139,47 +139,52 @@ to the variable names (basically, a clone of the stash).
 
 =head1 WORKING WITH VARIABLES
 
-It is important to note, that when working with scalar variables, default behavior is to B<copy> values.
+It is important to note, that when working with scalar variables, the default
+behavior is to B<copy> values.
 
-    my $stash = Package::Stash->new('Some::Namespace');
-    my $variable = 1;
-    # $Some::Namespace::name is a copy of $variable
-    $stash->add_symbol('$name', $variable);
-    $variable++
-    # $Some::Namespace::name == 1 , $variable == 2
+  my $stash = Package::Stash->new('Some::Namespace');
+  my $variable = 1;
+  # $Some::Namespace::name is a copy of $variable
+  $stash->add_symbol('$name', $variable);
+  $variable++
+  # $Some::Namespace::name == 1 , $variable == 2
 
-This will likely confuse people who expect it to work the same as Perl's own stash mechanism, which simply
-creates new references to existing variables.
+This will likely confuse people who expect it to work the same as typeglob
+assignment, which simply creates new references to existing variables.
 
-    my $variable = 1;
-    {
-        no strict 'refs';
-        # assign $Package::Stash::name = $variable
-        *{'Package::Stash::name'} = \$variable;
-    }
-    $variable++ # affects both names
+  my $variable = 1;
+  {
+      no strict 'refs';
+      # assign $Package::Stash::name = $variable
+      *{'Package::Stash::name'} = \$variable;
+  }
+  $variable++ # affects both names
 
-If this behaviour is desired when working with C<Package::Stash>, simply pass C<Package::Stash> a C<SCALAR> C<REF>
+If this behaviour is desired when working with Package::Stash, simply pass
+Package::Stash a scalar ref:
 
-    my $stash = Package::Stash->new('Some::Namespace');
-    my $variable = 1;
-    # $Some::Namespace::name is now $variable
-    $stash->add_symbol('$name', \$variable);
-    $variable++
-    # $Some::Namespace::name == 2 , $variable == 2
+  my $stash = Package::Stash->new('Some::Namespace');
+  my $variable = 1;
+  # $Some::Namespace::name is now $variable
+  $stash->add_symbol('$name', \$variable);
+  $variable++
+  # $Some::Namespace::name == 2 , $variable == 2
 
-This will be what you want as well if you're ever working with creating C<Readonly> variables
+This will be what you want as well if you're ever working with L<Readonly>
+variables:
 
-    use Readonly;
-    Readonly my $value, 'hello';
+  use Readonly;
+  Readonly my $value, 'hello';
 
-    $stash->add_symbol('$name', \$value); # reference
-    print $Some::Namespace::name; # hello
-    $Some::Namespace::name .= " world"; # Tries to modify the read-only 'hello' and dies.
+  $stash->add_symbol('$name', \$value); # reference
+  print $Some::Namespace::name; # hello
+  # Tries to modify the read-only 'hello' and dies.
+  $Some::Namespace::name .= " world";
 
-    $stash->add_symbol('$name', $value); # copy
-    print $Some::Namespace::name; # hello
-    $Some::Namespace::name .= " world"; # No problem, modifying a copy, not the original
+  $stash->add_symbol('$name', $value); # copy
+  print $Some::Namespace::name; # hello
+  # No problem, modifying a copy, not the original
+  $Some::Namespace::name .= " world";
 
 =head1 BUGS / CAVEATS
 
