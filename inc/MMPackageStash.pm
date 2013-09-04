@@ -69,6 +69,16 @@ PREREQS
     return $template;
 };
 
+after register_prereqs => sub {
+    my $self = shift;
+    $self->zilla->register_prereqs(
+        { phase => 'configure' },
+        'Config'           => 0,
+        'File::Spec'       => 0,
+        'Text::ParseWords' => 0,
+    );
+};
+
 __PACKAGE__->meta->make_immutable;
 no Moose;
 
