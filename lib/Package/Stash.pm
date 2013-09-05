@@ -201,9 +201,8 @@ L<perlref/Making References> point 7 for more information.
 
 =back
 
-Please report any bugs through RT: email
-C<bug-package-stash at rt.cpan.org>, or browse to
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Package-Stash>.
+Please report any bugs to GitHub Issues at
+L<https://github.com/doy/package-stash/issues>.
 
 =head1 SEE ALSO
 
