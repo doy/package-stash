@@ -193,6 +193,7 @@ sub add_symbol {
             local *__ANON__:: = $namespace;
             no strict 'refs';
             no warnings 'void';
+            no warnings 'once';
             *{"__ANON__::$name"};
         }
 
