@@ -8,7 +8,8 @@ around _build_MakeFile_PL_template => sub {
     my $orig = shift;
     my $self = shift;
 
-    my $xs_version = $self->zilla->prereqs->requirements_for('runtime', 'recommends')->as_string_hash->{'Package::Stash::XS'};
+    # XXX keep this in sync with dist.ini
+    my $xs_version = 0.26;
 
     # can_run and can_cc copied from M::I
     my $helpers = <<'HELPERS';
