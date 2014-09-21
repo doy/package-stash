@@ -5,13 +5,16 @@ use lib 't/lib';
 use Test::More;
 use Test::Fatal;
 
-use Test::Requires 'Package::Anon';
 use Package::Stash;
-use Symbol;
 
-plan skip_all => "Anonymous stashes in PP need at least perl 5.14"
-    if $] < 5.014
-    && $Package::Stash::IMPLEMENTATION eq 'PP';
+BEGIN {
+    plan skip_all => "Anonymous stashes in PP need at least perl 5.14"
+        if $] < 5.014
+        && $Package::Stash::IMPLEMENTATION eq 'PP';
+}
+
+use Test::Requires 'Package::Anon';
+use Symbol;
 
 my $Foo = Package::Anon->new('Foo');
 $Foo->{SOME_CONSTANT} = \1;
