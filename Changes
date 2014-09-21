@@ -1,6 +1,7 @@
 Revision history for Package-Stash
 
 {{$NEXT}}
+      - fix spurious warning in taint mode (Niko Tyni, #12)
 
 0.36  2013-09-03
       - support building with PUREPERL_ONLY
