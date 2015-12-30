@@ -250,6 +250,14 @@ sub has_symbol {
     if (reftype($entry_ref) eq 'GLOB') {
         if ($type eq 'SCALAR') {
             if (BROKEN_SCALAR_INITIALIZATION) {
+                {
+                    my $package = $self->name;
+
+                    # Turning off warnings does not silence this, so intercept it instead.
+                    local $SIG{__WARN__} = sub {1};
+                    return 1 if eval "package $package; my \$y = ${sigil}${name}; 1";
+                }
+
                 return defined ${ *{$entry_ref}{$type} };
             }
             else {
